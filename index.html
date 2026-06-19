@@ -27,8 +27,8 @@ svg{display:block;}
 .sa{padding:0 16px;}
 
 /* NAV */
-.bnav{width:100%;height:var(--nav);background:var(--white);border-top:1px solid rgba(0,0,0,.12);display:flex;align-items:center;justify-content:space-around;padding:0 4px;position:relative;z-index:10;}
-.ni{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 10px 10px;border-radius:var(--r);cursor:pointer;border:none;background:none;color:var(--ink3);min-width:50px;font-family:inherit;transition:all .15s;}
+.bnav{width:100%;height:calc(var(--nav) + env(safe-area-inset-bottom));background:var(--white);border-top:1px solid rgba(0,0,0,.12);display:flex;align-items:flex-start;justify-content:space-around;padding:8px 4px calc(10px + env(safe-area-inset-bottom));position:relative;z-index:10;}
+.ni{display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--r);cursor:pointer;border:none;background:none;color:var(--ink3);min-width:50px;font-family:inherit;transition:all .15s;}
 .ni svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;}
 .ni span{font-size:10px;font-weight:800;letter-spacing:.03em;}
 .ni.on{color:var(--ink);background:none;border:none;}
@@ -2018,34 +2018,55 @@ let cf='all';
 function setFilter(f,el){cf=f;document.querySelectorAll('#page-search .fchip').forEach(c=>c.classList.remove('on'));if(el)el.classList.add('on');doSearch(document.getElementById('search-input')?.value||'');}
 
 function importExcel(){
-  const doImport=()=>{
-    const inp=document.createElement('input');
-    inp.type='file';inp.accept='.xlsx,.xls';
-    inp.style.display='none';
-    inp.onchange=async e=>{
-      const file=e.target.files[0];
-      document.body.removeChild(inp);
-      if(!file)return;
-      showToast('讀取中...');
-      try{
-        const buf=await file.arrayBuffer();
-        const wb=XLSX.read(buf,{type:'array',cellDates:true});
-        const result=parseMyExcel(wb,file.name);
-        if(result)importFromExcel(result);
-      }catch(err){showToast('匯入失敗：'+err.message);}
-    };
-    document.body.appendChild(inp);
-    inp.click();
+  // 手機瀏覽器要求 input.click() 必須在使用者手勢的同一個呼叫鏈中觸發，
+  // 不能放在 async/await 或 script onload 的callback裡，否則會被靜默擋掉。
+  // 解法：先建立並立刻 click() input（保持在手勢鏈內），再背景載入 XLSX.js。
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='.xlsx,.xls';
+  inp.style.display='none';
+  let fileSelected=null;
+  inp.onchange=e=>{
+    fileSelected=e.target.files[0];
+    if(document.body.contains(inp))document.body.removeChild(inp);
+    if(!fileSelected){
+      showToast('未選擇檔案');
+      return;
+    }
+    processExcelFile(fileSelected);
   };
-  if(typeof XLSX==='undefined'){
-    showToast('載入 XLSX 解析器中...');
-    const sc=document.createElement('script');
-    sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    sc.onload=doImport;
-    document.head.appendChild(sc);
-    return;
+  document.body.appendChild(inp);
+  // 必須在同一個事件處理鏈中立即呼叫，不能延遲
+  inp.click();
+}
+
+async function processExcelFile(file){
+  showToast('讀取中...');
+  try{
+    // 確保 XLSX 函式庫已載入，若尚未載入則等待
+    if(typeof XLSX==='undefined'){
+      await new Promise((resolve,reject)=>{
+        const existing=document.querySelector('script[data-xlsx-loader]');
+        if(existing){
+          existing.addEventListener('load',resolve);
+          existing.addEventListener('error',()=>reject(new Error('XLSX載入失敗')));
+          return;
+        }
+        const sc=document.createElement('script');
+        sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        sc.setAttribute('data-xlsx-loader','1');
+        sc.onload=resolve;
+        sc.onerror=()=>reject(new Error('XLSX載入失敗，請檢查網路連線'));
+        document.head.appendChild(sc);
+      });
+    }
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array',cellDates:true});
+    const result=parseMyExcel(wb,file.name);
+    if(result)importFromExcel(result);
+    else showToast('找不到可匯入的資料，請確認檔案格式');
+  }catch(err){
+    showToast('匯入失敗：'+(err.message||'未知錯誤'));
   }
-  doImport();
 }
 function importExcel_old(){
   if(typeof XLSX==='undefined'){return;}
