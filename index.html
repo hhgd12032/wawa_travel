@@ -2231,6 +2231,10 @@ function setTimeInputs(prefix,timeStr,forceExtended){
   trigger.classList.toggle('extended',h>=24);
 }
 
+
+function testNamedFunction(e){
+  alert('C成功！透過具名function，檔名：'+(e.target.files[0]?e.target.files[0].name:'無'));
+}
 function onXlsxFileChange(e){
   const inp=e.target;
   const file=inp&&inp.files&&inp.files[0];
@@ -2875,8 +2879,18 @@ function toggleMapLink(){
 
     <!-- 最簡測試：完全inline，不依賴任何外部函式 -->
     <div style="background:red;padding:16px;margin-bottom:14px;border-radius:8px;">
-      <div style="color:#fff;font-weight:900;margin-bottom:10px;">🔴 最簡測試（不依賴任何外部function）</div>
-      <input type="file" onchange="alert('成功！檔名：'+(this.files[0]?this.files[0].name:'無'))" style="background:#fff;padding:8px;border-radius:6px;width:100%;">
+      <div style="color:#fff;font-weight:900;margin-bottom:10px;">🔴 測試A：inline+無accept（已知成功）</div>
+      <input type="file" onchange="alert('A成功！檔名：'+(this.files[0]?this.files[0].name:'無'))" style="background:#fff;padding:8px;border-radius:6px;width:100%;">
+    </div>
+
+    <div style="background:orange;padding:16px;margin-bottom:14px;border-radius:8px;">
+      <div style="color:#fff;font-weight:900;margin-bottom:10px;">🟠 測試B：inline+有accept=".xlsx,.xls"</div>
+      <input type="file" accept=".xlsx,.xls" onchange="alert('B成功！檔名：'+(this.files[0]?this.files[0].name:'無'))" style="background:#fff;padding:8px;border-radius:6px;width:100%;">
+    </div>
+
+    <div style="background:purple;padding:16px;margin-bottom:14px;border-radius:8px;">
+      <div style="color:#fff;font-weight:900;margin-bottom:10px;">🟣 測試C：呼叫外部具名function（無accept）</div>
+      <input type="file" onchange="testNamedFunction(event)" style="background:#fff;padding:8px;border-radius:6px;width:100%;">
     </div>
 
 
