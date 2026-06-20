@@ -767,7 +767,6 @@ function deleteDayFromList(dayId){
   try {
     buildRating();
     renderHome();
-    setupDiagListeners();
     document.addEventListener('click',function(e){if(!e.target.closest('.fdrop-wrap'))closeDrops();});
   } catch(e) {
     var box=document.getElementById('err-box');
@@ -2210,29 +2209,6 @@ function setTimeInputs(prefix,timeStr,forceExtended){
   trigger.classList.toggle('extended',h>=24);
 }
 
-function diagLog(msg){
-  const el=document.getElementById('diag-log');
-  if(!el)return;
-  const time=new Date().toLocaleTimeString();
-  el.textContent+='\n['+time+'] '+msg;
-  el.scrollTop=el.scrollHeight;
-}
-function setupDiagListeners(){
-  ['diag-f5','diag-f6','diag-f7','diag-f8'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el||el._diagBound)return;
-    el._diagBound=true;
-    el.addEventListener('change',function(e){
-      const file=e.target.files&&e.target.files[0];
-      if(file){
-        diagLog('✅ '+id+' 觸發成功！檔名：'+file.name+'，大小：'+file.size+'bytes');
-      }else{
-        diagLog('⚠️ '+id+' change事件觸發但無檔案');
-      }
-    });
-    el.addEventListener('click',function(){diagLog('👆 '+id+' 被點擊(click事件)');});
-  });
-}
 function onXlsxFileChange(e){
   showToast('已選擇檔案，處理中...');
   const inp=e.target;
@@ -2856,34 +2832,6 @@ function importFromExcel(data){
 <div id="page-settings" class="page">
   <div class="phdr"><div class="disp">設定</div></div>
   <div class="sa">
-    <!-- ══ Excel 匯入診斷工具（臨時測試用） ══ -->
-    <div style="font-size:11px;font-weight:900;margin-bottom:7px;margin-top:20px;letter-spacing:.06em;text-transform:uppercase;color:#e05500;">🔧 Excel匯入診斷（測試用）</div>
-    <div style="background:#fff;border:2px solid #e05500;border-radius:10px;padding:14px;margin-bottom:14px;">
-      <div style="font-size:11px;color:#888;margin-bottom:10px;">請依序測試，這次完全去除CSS干擾</div>
-
-      <div style="margin-bottom:14px;padding:10px;background:#FFF8E1;border-radius:6px;">
-        <div style="font-size:12px;font-weight:800;margin-bottom:6px;">方法5：純原生input（無任何包裝/CSS）</div>
-        <input type="file" id="diag-f5">
-      </div>
-
-      <div style="margin-bottom:14px;padding:10px;background:#E1F5FF;border-radius:6px;">
-        <div style="font-size:12px;font-weight:800;margin-bottom:6px;">方法6：原生input + accept=".xlsx"</div>
-        <input type="file" id="diag-f6" accept=".xlsx">
-      </div>
-
-      <div style="margin-bottom:14px;padding:10px;background:#FFE8E0;border-radius:6px;">
-        <div style="font-size:12px;font-weight:800;margin-bottom:6px;">方法7：accept用MIME type</div>
-        <input type="file" id="diag-f7" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
-      </div>
-
-      <div style="margin-bottom:14px;padding:10px;background:#E8F5E0;border-radius:6px;">
-        <div style="font-size:12px;font-weight:800;margin-bottom:6px;">方法8：accept="*/*"</div>
-        <input type="file" id="diag-f8" accept="*/*">
-      </div>
-
-      <div id="diag-log" style="background:#111;color:#0f0;font-family:monospace;font-size:11px;padding:10px;border-radius:6px;min-height:100px;white-space:pre-wrap;word-break:break-all;line-height:1.5;max-height:200px;overflow-y:auto;">等待測試...</div>
-      <button type="button" onclick="document.getElementById('diag-log').textContent='已清空，等待測試...'" style="margin-top:8px;font-size:11px;padding:6px 12px;border:1px solid rgba(0,0,0,.2);border-radius:6px;background:#fff;">清空log</button>
-    </div>
 
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">個人資料</div>
     <!-- 護照卡 -->
@@ -2961,7 +2909,7 @@ function importFromExcel(data){
     <div class="card" style="margin-bottom:11px;padding:4px 11px;">
       <div class="setr" onclick="exportData()"><div class="setl"><div class="setic" style="background:var(--mint);"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><div><div class="setlb">匯出 JSON</div><div class="setsb">備份所有資料</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       <div class="setr" onclick="importData()"><div class="setl"><div class="setic" style="background:var(--blue);"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><div><div class="setlb">匯入 JSON</div><div class="setsb">還原備份</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      <label for="xlsx-file-input" class="setr" style="border-bottom:none;cursor:pointer;position:relative;overflow:hidden;"><div class="setl"><div class="setic" style="background:#E8FFE8;"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="setlb">匯入 Excel</div><div class="setsb">支援你的行程格式</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></label><input type="file" id="xlsx-file-input" accept=".xlsx,.xls" onchange="onXlsxFileChange(event)" capture="false" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;-webkit-appearance:none;">
+      <label for="xlsx-file-input" class="setr" style="border-bottom:none;cursor:pointer;position:relative;overflow:hidden;"><div class="setl"><div class="setic" style="background:#E8FFE8;"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="setlb">匯入 Excel</div><div class="setsb">支援你的行程格式</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></label><input type="file" id="xlsx-file-input" accept=".xlsx,.xls" onchange="onXlsxFileChange(event)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;-webkit-appearance:none;">
     </div>
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">危險區域</div>
     <div class="card" style="margin-bottom:20px;padding:4px 11px;">
