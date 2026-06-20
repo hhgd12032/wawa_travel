@@ -2232,14 +2232,15 @@ function setTimeInputs(prefix,timeStr,forceExtended){
 }
 
 function onXlsxFileChange(e){
-  showToast('已選擇檔案，處理中...');
+  alert('change事件已觸發！');
   const inp=e.target;
   const file=inp&&inp.files&&inp.files[0];
+  alert('檔案物件：'+(file?file.name:'無檔案'));
   if(!file){
     showToast('未取得檔案，請重試');
     return;
   }
-  // 先處理檔案，成功後才清空 input value（避免清空動作影響檔案讀取）
+  showToast('已選擇檔案，處理中...');
   processExcelFile(file).finally(()=>{
     try{inp.value='';}catch(err){}
   });
@@ -2872,6 +2873,13 @@ function toggleMapLink(){
 <div id="page-settings" class="page">
   <div class="phdr"><div class="disp">設定</div></div>
   <div class="sa">
+
+    <!-- 最簡測試：完全inline，不依賴任何外部函式 -->
+    <div style="background:red;padding:16px;margin-bottom:14px;border-radius:8px;">
+      <div style="color:#fff;font-weight:900;margin-bottom:10px;">🔴 最簡測試（不依賴任何外部function）</div>
+      <input type="file" onchange="alert('成功！檔名：'+(this.files[0]?this.files[0].name:'無'))" style="background:#fff;padding:8px;border-radius:6px;width:100%;">
+    </div>
+
 
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">個人資料</div>
     <!-- 護照卡 -->
