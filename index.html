@@ -398,22 +398,23 @@ svg{display:block;}
 .twp-trigger{width:100%;padding:11px 14px;border:var(--bd);border-radius:var(--r);font-size:15px;font-weight:800;font-family:'Courier New',Courier,monospace;background:var(--white);color:var(--ink);cursor:pointer;text-align:center;}
 .twp-trigger.extended{color:#FF6B35;border-color:rgba(255,107,53,.5);}
 .twp-trigger.empty{color:var(--ink3);font-weight:600;}
-.twp-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-end;justify-content:center;}
+.twp-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center;padding:20px;}
 .twp-overlay.open{display:flex;}
-.twp-sheet{width:100%;max-width:480px;background:#fff;border-radius:16px 16px 0 0;border:2px solid #111;border-bottom:none;overflow:hidden;}
-.twp-head{padding:12px 14px;background:#F7F3EC;background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(0,0,0,.04) 5px,rgba(0,0,0,.04) 6px);border-bottom:2px solid #111;font-size:13px;font-weight:900;text-align:center;}
-.twp-area{position:relative;height:200px;display:flex;justify-content:center;align-items:center;}
-.twp-col{position:relative;width:90px;height:200px;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;}
+.twp-sheet{width:100%;max-width:380px;background:#fff;border-radius:18px;border:2px solid #111;box-shadow:5px 5px 0 #111;overflow:hidden;display:flex;flex-direction:column;max-height:90vh;}
+.twp-head{padding:16px 16px 14px;background:#F7F3EC;background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(0,0,0,.04) 5px,rgba(0,0,0,.04) 6px);border-bottom:2px solid #111;font-size:15px;font-weight:900;text-align:center;flex-shrink:0;}
+.twp-area{position:relative;height:260px;display:flex;justify-content:center;align-items:center;flex-shrink:0;padding:0 10px;}
+.twp-col{position:relative;width:100px;height:260px;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;}
 .twp-col::-webkit-scrollbar{display:none;}
-.twp-pad{height:80px;}
-.twp-item{height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;font-family:'Courier New',Courier,monospace;color:#bbb;scroll-snap-align:center;}
+.twp-pad{height:110px;}
+.twp-item{height:40px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;font-family:'Courier New',Courier,monospace;color:#bbb;scroll-snap-align:center;}
 .twp-item.extended{color:#FFB89A;}
-.twp-center-line{position:absolute;top:80px;left:10%;right:10%;height:40px;border-top:2px solid #111;border-bottom:2px solid #111;background:rgba(255,216,77,.15);pointer-events:none;}
-.twp-colon{font-size:22px;font-weight:900;color:#111;padding:0 4px;}
-.twp-foot{padding:10px 14px;border-top:1.5px dashed rgba(0,0,0,.15);display:flex;justify-content:space-between;align-items:center;}
-.twp-confirm{background:#111;color:var(--yellow);border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;}
-.twp-clear{background:none;border:none;font-size:12px;color:var(--ink3);font-weight:700;cursor:pointer;}
-.twp-hint{font-size:10px;color:#888;}
+.twp-center-line{position:absolute;top:110px;left:5%;right:5%;height:40px;border-top:2.5px solid #111;border-bottom:2.5px solid #111;background:rgba(255,216,77,.18);pointer-events:none;border-radius:6px;}
+.twp-colon{font-size:26px;font-weight:900;color:#111;padding:0 6px;flex-shrink:0;}
+.twp-foot{padding:14px 16px;border-top:2px solid #111;display:flex;flex-direction:column;gap:10px;flex-shrink:0;background:#fff;}
+.twp-foot-row{display:flex;justify-content:space-between;align-items:center;}
+.twp-confirm{width:100%;background:#111;color:var(--yellow);border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;}
+.twp-clear{background:none;border:1.5px solid rgba(0,0,0,.2);border-radius:8px;padding:6px 14px;font-size:12px;color:#555;font-weight:700;cursor:pointer;}
+.twp-hint{font-size:11px;color:#888;}
 </style>
 <script>
 
@@ -766,6 +767,7 @@ function deleteDayFromList(dayId){
   try {
     buildRating();
     renderHome();
+    setupDiagListeners();
     document.addEventListener('click',function(e){if(!e.target.closest('.fdrop-wrap'))closeDrops();});
   } catch(e) {
     var box=document.getElementById('err-box');
@@ -2207,6 +2209,30 @@ function setTimeInputs(prefix,timeStr,forceExtended){
   trigger.classList.remove('empty');
   trigger.classList.toggle('extended',h>=24);
 }
+
+function diagLog(msg){
+  const el=document.getElementById('diag-log');
+  if(!el)return;
+  const time=new Date().toLocaleTimeString();
+  el.textContent+='\n['+time+'] '+msg;
+  el.scrollTop=el.scrollHeight;
+}
+function setupDiagListeners(){
+  ['diag-f1','diag-f2','diag-f3','diag-f4'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el||el._diagBound)return;
+    el._diagBound=true;
+    el.addEventListener('change',function(e){
+      const file=e.target.files&&e.target.files[0];
+      if(file){
+        diagLog('✅ '+id+' 觸發成功！檔名：'+file.name+'，大小：'+file.size+'bytes');
+      }else{
+        diagLog('⚠️ '+id+' change事件觸發但無檔案');
+      }
+    });
+    el.addEventListener('click',function(){diagLog('👆 '+id+' 被點擊(click事件)');});
+  });
+}
 function onXlsxFileChange(e){
   showToast('已選擇檔案，處理中...');
   const inp=e.target;
@@ -2830,6 +2856,30 @@ function importFromExcel(data){
 <div id="page-settings" class="page">
   <div class="phdr"><div class="disp">設定</div></div>
   <div class="sa">
+    <!-- ══ Excel 匯入診斷工具（臨時測試用） ══ -->
+    <div style="font-size:11px;font-weight:900;margin-bottom:7px;margin-top:20px;letter-spacing:.06em;text-transform:uppercase;color:#e05500;">🔧 Excel匯入診斷（測試用）</div>
+    <div style="background:#fff;border:2px solid #e05500;border-radius:10px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:11px;color:#888;margin-bottom:10px;">請依序點擊下方4個按鈕測試，下方會顯示結果</div>
+
+      <label style="position:relative;display:block;width:100%;padding:12px;background:#FFD84D;border:2px solid #111;border-radius:8px;font-weight:900;text-align:center;cursor:pointer;overflow:hidden;margin-bottom:8px;font-size:13px;">
+        方法1：label覆蓋input
+        <input type="file" id="diag-f1" accept=".xlsx,.xls" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;">
+      </label>
+
+      <input type="file" id="diag-f2" accept=".xlsx,.xls" style="display:block;width:100%;padding:12px;background:#4DBFFF;border:2px solid #111;border-radius:8px;font-weight:900;margin-bottom:8px;font-size:13px;">
+
+      <button type="button" onclick="document.getElementById('diag-f3').click()" style="display:block;width:100%;padding:12px;background:#FF6B35;border:2px solid #111;border-radius:8px;font-weight:900;color:#fff;cursor:pointer;font-size:13px;margin-bottom:8px;">方法3：按鈕JS觸發</button>
+      <input type="file" id="diag-f3" accept=".xlsx,.xls" style="display:none;">
+
+      <label style="position:relative;display:block;width:100%;padding:12px;background:#3DD6C0;border:2px solid #111;border-radius:8px;font-weight:900;text-align:center;cursor:pointer;overflow:hidden;margin-bottom:10px;font-size:13px;">
+        方法4：無accept限制
+        <input type="file" id="diag-f4" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;">
+      </label>
+
+      <div id="diag-log" style="background:#111;color:#0f0;font-family:monospace;font-size:11px;padding:10px;border-radius:6px;min-height:100px;white-space:pre-wrap;word-break:break-all;line-height:1.5;max-height:200px;overflow-y:auto;">等待測試...</div>
+      <button type="button" onclick="document.getElementById('diag-log').textContent='已清空，等待測試...'" style="margin-top:8px;font-size:11px;padding:6px 12px;border:1px solid rgba(0,0,0,.2);border-radius:6px;background:#fff;">清空log</button>
+    </div>
+
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">個人資料</div>
     <!-- 護照卡 -->
     <div class="pp-card">
@@ -2906,7 +2956,7 @@ function importFromExcel(data){
     <div class="card" style="margin-bottom:11px;padding:4px 11px;">
       <div class="setr" onclick="exportData()"><div class="setl"><div class="setic" style="background:var(--mint);"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><div><div class="setlb">匯出 JSON</div><div class="setsb">備份所有資料</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       <div class="setr" onclick="importData()"><div class="setl"><div class="setic" style="background:var(--blue);"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><div><div class="setlb">匯入 JSON</div><div class="setsb">還原備份</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      <label for="xlsx-file-input" class="setr" style="border-bottom:none;cursor:pointer;"><div class="setl"><div class="setic" style="background:#E8FFE8;"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="setlb">匯入 Excel</div><div class="setsb">支援你的行程格式</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></label><input type="file" id="xlsx-file-input" accept=".xlsx,.xls" style="position:absolute;width:1px;height:1px;padding:0;margin:0;overflow:hidden;clip:rect(0,0,0,0);opacity:0;" onchange="onXlsxFileChange(event)">
+      <label for="xlsx-file-input" class="setr" style="border-bottom:none;cursor:pointer;position:relative;overflow:hidden;"><div class="setl"><div class="setic" style="background:#E8FFE8;"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="setlb">匯入 Excel</div><div class="setsb">支援你的行程格式</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></label><input type="file" id="xlsx-file-input" accept=".xlsx,.xls" onchange="onXlsxFileChange(event)" capture="false" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;-webkit-appearance:none;">
     </div>
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">危險區域</div>
     <div class="card" style="margin-bottom:20px;padding:4px 11px;">
@@ -2969,9 +3019,11 @@ function importFromExcel(data){
           <div class="twp-col" id="twp-min-col"></div>
         </div>
         <div class="twp-foot">
-          <button type="button" class="twp-clear" onclick="clearTimeWheel()">清空</button>
-          <div class="twp-hint">上下滑動選擇 · 00-05為凌晨延伸</div>
-          <button type="button" class="twp-confirm" onclick="confirmTimeWheel()">確認</button>
+          <div class="twp-foot-row">
+            <div class="twp-hint">上下滑動選擇 · 00-05為凌晨延伸</div>
+            <button type="button" class="twp-clear" onclick="clearTimeWheel()">清空</button>
+          </div>
+          <button type="button" class="twp-confirm" onclick="confirmTimeWheel()">確認時間</button>
         </div>
       </div>
     </div>
