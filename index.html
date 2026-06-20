@@ -280,9 +280,11 @@ svg{display:block;}
 /* FORM */
 .fr{margin-bottom:9px;}
 .fl{display:block;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px;}
-.fi{width:100%;padding:9px 11px;border:var(--bd);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--ink);background:var(--white);outline:none;}
+.fi{width:100%;min-width:0;box-sizing:border-box;padding:9px 11px;border:var(--bd);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--ink);background:var(--white);outline:none;}
+.fi[type="date"],.fi[type="time"]{appearance:none;-webkit-appearance:none;font-size:12px;padding:9px 6px;}
 .fi:focus{background:#FFFAE8;}
-.f2c{display:grid;grid-template-columns:1fr 1fr;gap:8px;} .f2c .fi{min-width:0;}
+.f2c{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:0;}
+.f2c>div{min-width:0;} .f2c .fi{min-width:0;}
 .trow{display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;margin-bottom:9px;scrollbar-width:none;}
 .trow::-webkit-scrollbar{display:none;}
 .tbtn{flex-shrink:0;padding:5px 10px;border-radius:99px;border:var(--bd);background:var(--white);font-size:11px;font-weight:800;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:4px;font-family:inherit;}
@@ -385,6 +387,33 @@ svg{display:block;}
 .pp-badge-body{background:#F7F3EC;padding:7px 8px;text-align:center;}
 .pp-badge-av{width:36px;height:36px;border-radius:6px;border:2px solid var(--ink);background:var(--yellow);display:flex;align-items:center;justify-content:center;margin:0 auto 4px;box-shadow:1px 1px 0 var(--ink);}
 .pp-badge-av svg{stroke:var(--ink);fill:none;stroke-width:2;width:18px;height:18px;}
+
+.tinp-row{display:flex;align-items:center;gap:6px;}
+.tinp{width:100%;padding:9px 6px;border:var(--bd);border-radius:var(--r);font-size:16px;font-weight:900;font-family:'Courier New',Courier,monospace;text-align:center;outline:none;color:var(--ink);background:var(--white);}
+.tinp.extended{color:#FF6B35;border-color:rgba(255,107,53,.5);}
+.tinp-colon{font-size:16px;font-weight:900;color:var(--ink3);flex-shrink:0;}
+.tinp-hint{font-size:10px;color:#FF6B35;font-weight:700;margin-top:4px;display:none;}
+.tinp-hint.show{display:block;}
+
+.twp-trigger{width:100%;padding:11px 14px;border:var(--bd);border-radius:var(--r);font-size:15px;font-weight:800;font-family:'Courier New',Courier,monospace;background:var(--white);color:var(--ink);cursor:pointer;text-align:center;}
+.twp-trigger.extended{color:#FF6B35;border-color:rgba(255,107,53,.5);}
+.twp-trigger.empty{color:var(--ink3);font-weight:600;}
+.twp-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-end;justify-content:center;}
+.twp-overlay.open{display:flex;}
+.twp-sheet{width:100%;max-width:480px;background:#fff;border-radius:16px 16px 0 0;border:2px solid #111;border-bottom:none;overflow:hidden;}
+.twp-head{padding:12px 14px;background:#F7F3EC;background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(0,0,0,.04) 5px,rgba(0,0,0,.04) 6px);border-bottom:2px solid #111;font-size:13px;font-weight:900;text-align:center;}
+.twp-area{position:relative;height:200px;display:flex;justify-content:center;align-items:center;}
+.twp-col{position:relative;width:90px;height:200px;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;}
+.twp-col::-webkit-scrollbar{display:none;}
+.twp-pad{height:80px;}
+.twp-item{height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;font-family:'Courier New',Courier,monospace;color:#bbb;scroll-snap-align:center;}
+.twp-item.extended{color:#FFB89A;}
+.twp-center-line{position:absolute;top:80px;left:10%;right:10%;height:40px;border-top:2px solid #111;border-bottom:2px solid #111;background:rgba(255,216,77,.15);pointer-events:none;}
+.twp-colon{font-size:22px;font-weight:900;color:#111;padding:0 4px;}
+.twp-foot{padding:10px 14px;border-top:1.5px dashed rgba(0,0,0,.15);display:flex;justify-content:space-between;align-items:center;}
+.twp-confirm{background:#111;color:var(--yellow);border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;}
+.twp-clear{background:none;border:none;font-size:12px;color:var(--ink3);font-weight:700;cursor:pointer;}
+.twp-hint{font-size:10px;color:#888;}
 </style>
 <script>
 
@@ -583,6 +612,26 @@ function pickTripColor(existingTrips){
   const avail=colors.filter(c=>c!==lastColor);
   // Hash based on count for variety
   return avail[existingTrips.length%avail.length];
+}
+
+// 將時間字串轉換為排序用的數值，凌晨0:00-04:59視為「前一天的延續」，排在當天最後
+
+// 將時間格式化顯示：若該事件時間早於當天最早事件超過5小時門檻(代表是凌晨延伸時段)，
+// 顯示成 24:00 以上格式並標示提醒
+function formatEventTime(t, isExtended){
+  if(!t)return '';
+  if(!isExtended)return t;
+  const parts=t.split(':');
+  let h=(parseInt(parts[0],10)||0)+24;
+  return h+':'+parts[1];
+}
+function timeSort(t){
+  if(!t)return 9999;
+  const parts=t.split(':');
+  let h=parseInt(parts[0],10)||0;
+  const m=parseInt(parts[1],10)||0;
+  if(h<5)h+=24; // 凌晨0-4點當作24-28點，排在23:59之後
+  return h*60+m;
 }
 function addTagToWrap(e,wrapId,hiddenId){
   if(e.key!=='Enter')return;
@@ -1230,8 +1279,8 @@ function renderDayList(){
     const isLast=i===sorted.length-1;
     const chips=splitTags(day.tags).map(t=>`<span class="dchip">${t}</span>`).join('');
     const weekday=['日','一','二','三','四','五','六'][new Date(day.date).getDay()];
-    const highlightHtml=day.highlight?`<div style="font-size:11px;color:var(--ink2);margin-top:4px;">✦ ${day.highlight}</div>`:'';
-    const funHtml=day.fun?`<div style="font-size:11px;color:var(--orange);margin-top:2px;">😄 ${day.fun}</div>`:'';
+    const highlightHtml=day.highlight?`<div style="font-size:12px;color:#333;margin-top:4px;line-height:1.4;">✦ ${day.highlight}</div>`:'';
+    const funHtml=day.fun?`<div style="font-size:12px;color:var(--orange);margin-top:2px;line-height:1.4;">😄 ${day.fun}</div>`:'';
     const evCount=(day.events||[]).length;
     const evBadge=evCount>0?`<span style="font-size:10px;font-weight:700;color:var(--ink3);">${evCount} 個事件</span>`:'';
     return `<div class="drow">
@@ -1427,7 +1476,7 @@ function renderDayDetail(){
   // timeline
   const tl=document.getElementById('tl-container');
   if(!tl)return;
-  const events=(day.events||[]).slice().sort((a,b)=>a.startTime.localeCompare(b.startTime));
+  const events=(day.events||[]).slice().sort((a,b)=>timeSort(a.startTime)-timeSort(b.startTime));
   if(events.length===0){
     tl.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg><div class="et">還沒有時程事件</div><div class="es">點右下角 ＋ 新增事件</div></div>`;
     return;
@@ -1436,11 +1485,14 @@ function renderDayDetail(){
   const typePill={景點:'py',餐廳:'pr',交通:'pb',住宿:'pg',購物:'pp',娛樂:'pp',移動:'pb',休息:'pg',其他:'pz'};
   tl.innerHTML=events.map((ev,i)=>{
     const isLast=i===events.length-1;
+    // 判斷是否為凌晨延伸時段：時間值經timeSort換算後>=24*60，代表是「跨夜的當天延續」
+    const isExtended=timeSort(ev.startTime)>=24*60;
+    const displayTime=formatEventTime(ev.startTime,isExtended);
     const mapsUrl=ev.place?`https://maps.google.com/search?q=${encodeURIComponent(ev.place)}`:'';
-    const tagsHtml=ev.tags?splitTags(ev.tags).map(t=>`<span style="font-size:10px;font-weight:700;background:rgba(0,0,0,.08);color:var(--ink2);border:1px solid rgba(0,0,0,.15);border-radius:3px;padding:1px 6px;font-family:'Courier New',Courier,monospace;">${t}</span>`).join(''):'';
-    const ratingHtml=ev.rating?`<span style="font-size:10px;color:var(--ink3);">★ ${ev.rating}/10</span>`:'';
+    const tagsHtml=ev.tags?splitTags(ev.tags).map(t=>`<span style="font-size:11px;font-weight:700;background:rgba(0,0,0,.08);color:#444;border:1px solid rgba(0,0,0,.15);border-radius:3px;padding:2px 8px;font-family:'Courier New',Courier,monospace;">${t}</span>`).join(''):'';
+    const ratingHtml=ev.rating?`<span style="font-size:11px;color:#666;font-weight:600;">★ ${ev.rating}/10</span>`:'';
     return `<div class="tle">
-      <div class="tlt">${ev.startTime||''}</div>
+      <div class="tlt"${isExtended?' style="color:#e05500;font-weight:800;"':''}>${displayTime}</div>
       <div class="tldc">
         <div class="tld ${typeColor[ev.type]||''}"></div>
         ${!isLast?'<div class="tlc"></div>':''}
@@ -1448,19 +1500,19 @@ function renderDayDetail(){
       <div class="evc">
         <!-- 頂部：名稱 + 類型右對齊 + 編輯刪除 -->
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:3px;">
-          <div style="font-size:13px;font-weight:900;color:#111;flex:1;">${ev.place||ev.desc||'（未命名）'}</div>
+          <div style="font-size:14px;font-weight:900;color:#111;flex:1;">${ev.place||ev.desc||'（未命名）'}</div>
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
-            <span class="evtype ${typePill[ev.type]||'pz'}" style="font-size:9px;">${ev.type||'其他'}</span>
+            <span class="evtype ${typePill[ev.type]||'pz'}" style="font-size:10px;">${ev.type||'其他'}</span>
             <button class="evab ed" onclick="editEvent('${ev.id}')" style="width:26px;height:26px;border-radius:6px;border:1.5px solid var(--ink);background:var(--white);"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
             <button class="evab" onclick="deleteEvent('${ev.id}')" style="width:26px;height:26px;border-radius:6px;border:1.5px solid var(--ink);background:#FFE0CC;"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
           </div>
         </div>
         <!-- 描述 -->
-        ${ev.desc&&ev.place?`<div style="font-size:11px;color:var(--ink2);margin-bottom:3px;">${ev.desc}</div>`:''}
+        ${ev.desc&&ev.place?`<div style="font-size:13px;color:#333;margin-bottom:5px;line-height:1.4;">${ev.desc}</div>`:''}
         <!-- hashtag -->
         ${tagsHtml?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px;">${tagsHtml}</div>`:''}
         <!-- 附註 -->
-        ${ev.note?`<div style="font-size:10px;color:var(--ink3);padding:2px 6px;background:rgba(0,0,0,.04);border-radius:4px;margin-bottom:3px;">📝 ${ev.note}</div>`:''}
+        ${ev.note?`<div style="font-size:11px;color:#666;padding:4px 8px;background:rgba(0,0,0,.04);border-radius:4px;margin-bottom:3px;">📝 ${ev.note}</div>`:''}
         <!-- 評分 -->
         ${ratingHtml?`<div style="margin-top:2px;">${ratingHtml}</div>`:''}
       </div>
@@ -1551,6 +1603,11 @@ function editEvent(eid){
   editingEventId=eid;
   // populate form
   v('ev-start',ev.startTime);v('ev-end',ev.endTime);
+  // 載入時間到自訂輸入框，判斷是否為凌晨延伸時段
+  const isStartExt=timeSort(ev.startTime)>=24*60;
+  setTimeInputs('ev-start',ev.startTime,isStartExt);
+  const isEndExt=ev.endTime?timeSort(ev.endTime)>=24*60:false;
+  setTimeInputs('ev-end',ev.endTime,isEndExt);
   v('ev-place',ev.place);v('ev-desc',ev.desc);
   v('ev-note',ev.note);
   loadTagsToWrap(ev.tags||'','ev-tags-wrap','ev-tags');
@@ -1676,6 +1733,12 @@ function saveEvent(){
   renderDayDetail();
 }
 
+
+function openNewEvent(){
+  editingEventId=null;
+  resetEventForm();
+  openSh('qa-ov');
+}
 function resetEventForm(){
   ['ev-start','ev-end','ev-place','ev-desc','ev-tags','ev-note'].forEach(id=>v(id,''));
   const evw=document.getElementById('ev-tags-wrap');if(evw)evw.querySelectorAll('.ctag').forEach(t=>t.remove());
@@ -1683,6 +1746,22 @@ function resetEventForm(){
   setRating(0);
   const ml=document.getElementById('map-link');if(ml)ml.style.display='none';
   const mc=document.getElementById('ev-map-check');if(mc)mc.checked=false;
+
+  // 開始時間：帶入「同一天最後一個事件的開始時間」，若沒有前一個事件則保持未選擇
+  const trips=getTrips();
+  const trip=trips.find(t=>t.id===currentTripId);
+  const day=trip?(trip.days||[]).find(d=>d.id===currentDayId):null;
+  const events=day?(day.events||[]).slice().sort((a,b)=>timeSort(a.startTime)-timeSort(b.startTime)):[];
+  if(events.length>0){
+    const lastEv=events[events.length-1];
+    const lastIsExt=timeSort(lastEv.startTime)>=24*60;
+    setTimeInputs('ev-start',lastEv.startTime,lastIsExt);
+  } else {
+    // 沒有前一個事件：開始時間留白，等使用者自己點選（滾輪內分鐘預設會吸附到整點00）
+    setTimeInputs('ev-start','',false);
+  }
+  // 結束時間欄位永遠清空，等使用者調整
+  setTimeInputs('ev-end','',false);
 }
 
 // ── SAVE: Expense ──
@@ -2017,12 +2096,129 @@ function doSearch(q){
 let cf='all';
 function setFilter(f,el){cf=f;document.querySelectorAll('#page-search .fchip').forEach(c=>c.classList.remove('on'));if(el)el.classList.add('on');doSearch(document.getElementById('search-input')?.value||'');}
 
+
+// 將輸入的時/分轉成 HH:MM 字串存入隱藏欄位，並標示凌晨延伸提示
+// ── 滾輪式時間選擇器 ──
+let twpTarget=null; // 'start' or 'end'
+const TWP_ITEM_H=40;
+
+function buildWheelCol(colEl, range, current, isHourCol){
+  colEl.innerHTML='<div class="twp-pad"></div>'+
+    range.map(v=>{
+      // 只有小時欄才需要判斷凌晨延伸（v>=24時換算顯示，但保留實際值在data-val）
+      const ext=isHourCol&&v>=24;
+      const label=String(ext?v-24:v).padStart(2,'0');
+      return `<div class="twp-item${ext?' extended':''}" data-val="${v}">${label}</div>`;
+    }).join('')+
+    '<div class="twp-pad"></div>';
+  // 定位到目前值
+  const idx=range.indexOf(current);
+  colEl.scrollTop=(idx>=0?idx:0)*TWP_ITEM_H;
+}
+
+function getWheelValue(colEl){
+  const idx=Math.round(colEl.scrollTop/TWP_ITEM_H);
+  const items=colEl.querySelectorAll('.twp-item');
+  if(items[idx])return parseInt(items[idx].getAttribute('data-val'),10);
+  return 0;
+}
+
+function openTimeWheel(target){
+  twpTarget=target;
+  const overlay=document.getElementById('twp-overlay');
+  const head=document.getElementById('twp-head');
+  if(head)head.textContent=target==='start'?'選擇開始時間':'選擇結束時間';
+  const hidden=document.getElementById('ev-'+target);
+  const curVal=hidden?hidden.value:'';
+  // 判斷目前是否已標示為凌晨延伸（用 trigger 按鈕的 class 判斷）
+  const trigger=document.getElementById('ev-'+target+'-trigger');
+  const wasExt=trigger&&trigger.classList.contains('extended');
+  let curH=9,curM=0;
+  if(curVal){
+    const parts=curVal.split(':');
+    curH=parseInt(parts[0],10)||0;
+    curM=parseInt(parts[1],10)||0;
+    if(wasExt&&curH<24)curH+=24;
+  }
+  const hourRange=[];for(let i=0;i<=29;i++)hourRange.push(i);
+  const minRange=[];for(let i=0;i<60;i+=5)minRange.push(i);
+  // 找最接近的分鐘刻度
+  let closestM=minRange.reduce((a,b)=>Math.abs(b-curM)<Math.abs(a-curM)?b:a,0);
+  buildWheelCol(document.getElementById('twp-hour-col'),hourRange,curH,true);
+  buildWheelCol(document.getElementById('twp-min-col'),minRange,closestM,false);
+  if(overlay)overlay.classList.add('open');
+}
+
+function closeTimeWheelBg(e){
+  if(e.target.id==='twp-overlay')document.getElementById('twp-overlay').classList.remove('open');
+}
+
+function confirmTimeWheel(){
+  if(!twpTarget)return;
+  const hourCol=document.getElementById('twp-hour-col');
+  const minCol=document.getElementById('twp-min-col');
+  const hv=getWheelValue(hourCol);
+  const mv=getWheelValue(minCol);
+  const isExt=hv>=24;
+  const storeH=isExt?hv-24:hv;
+  const timeStr=String(storeH).padStart(2,'0')+':'+String(mv).padStart(2,'0');
+  const displayStr=String(hv).padStart(2,'0')+':'+String(mv).padStart(2,'0');
+  document.getElementById('ev-'+twpTarget).value=timeStr;
+  const trigger=document.getElementById('ev-'+twpTarget+'-trigger');
+  if(trigger){
+    trigger.textContent=displayStr;
+    trigger.classList.remove('empty');
+    trigger.classList.toggle('extended',isExt);
+  }
+  document.getElementById('twp-overlay').classList.remove('open');
+}
+
+function clearTimeWheel(){
+  if(!twpTarget)return;
+  document.getElementById('ev-'+twpTarget).value='';
+  const trigger=document.getElementById('ev-'+twpTarget+'-trigger');
+  if(trigger){
+    trigger.textContent='選擇時間';
+    trigger.classList.add('empty');
+    trigger.classList.remove('extended');
+  }
+  document.getElementById('twp-overlay').classList.remove('open');
+}
+
+// 設定 trigger 按鈕顯示文字（供 resetEventForm / editEvent 使用）
+// forceExtended: 是否要顯示成 24+ 格式
+function setTimeInputs(prefix,timeStr,forceExtended){
+  const trigger=document.getElementById(prefix+'-trigger');
+  const hidden=document.getElementById(prefix);
+  if(!trigger||!hidden)return;
+  if(!timeStr){
+    hidden.value='';
+    trigger.textContent='選擇時間';
+    trigger.classList.add('empty');
+    trigger.classList.remove('extended');
+    return;
+  }
+  hidden.value=timeStr;
+  const parts=timeStr.split(':');
+  let h=parseInt(parts[0],10)||0;
+  const m=parseInt(parts[1],10)||0;
+  if(forceExtended&&h<24)h+=24;
+  trigger.textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  trigger.classList.remove('empty');
+  trigger.classList.toggle('extended',h>=24);
+}
 function onXlsxFileChange(e){
+  showToast('已選擇檔案，處理中...');
   const inp=e.target;
-  const file=inp.files&&inp.files[0];
-  inp.value='';
-  if(!file){showToast('未選擇檔案');return;}
-  processExcelFile(file);
+  const file=inp&&inp.files&&inp.files[0];
+  if(!file){
+    showToast('未取得檔案，請重試');
+    return;
+  }
+  // 先處理檔案，成功後才清空 input value（避免清空動作影響檔案讀取）
+  processExcelFile(file).finally(()=>{
+    try{inp.value='';}catch(err){}
+  });
 }
 function importExcel(){
   // 保留此函式以防其他地方呼叫；實際觸發已改用 <label for="xlsx-file-input">
@@ -2562,7 +2758,7 @@ function importFromExcel(data){
 
   <!-- 4. 新增時程事件按鈕 — 票根風格，在 hero 下方 -->
   <div style="padding:10px 16px 12px;background:var(--white);border-bottom:1px solid rgba(0,0,0,.06);">
-    <button type="button" onclick="openSh('qa-ov')"
+    <button type="button" onclick="openNewEvent()"
       style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
              font-size:13px;font-weight:900;padding:10px 16px;cursor:pointer;font-family:inherit;
              background:#F7F3EC;
@@ -2749,7 +2945,36 @@ function importFromExcel(data){
       <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>休息</button>
       <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>其他</button>
     </div>
-    <div class="f2c fr"><div><label class="fl">開始時間</label><input class="fi" id="ev-start" type="time" value="09:00" oninput="syncEndTime(this.value)"></div><div><label class="fl">結束時間</label><input class="fi" id="ev-end" type="time"></div></div>
+    <div class="f2c fr">
+      <div>
+        <label class="fl">開始時間</label>
+        <button type="button" class="twp-trigger empty" id="ev-start-trigger" onclick="openTimeWheel('start')">選擇時間</button>
+      </div>
+      <div>
+        <label class="fl">結束時間</label>
+        <button type="button" class="twp-trigger empty" id="ev-end-trigger" onclick="openTimeWheel('end')">選擇時間</button>
+      </div>
+    </div>
+    <input type="hidden" id="ev-start">
+    <input type="hidden" id="ev-end">
+
+    <!-- 滾輪選擇器 overlay -->
+    <div class="twp-overlay" id="twp-overlay" onclick="closeTimeWheelBg(event)">
+      <div class="twp-sheet" onclick="event.stopPropagation()">
+        <div class="twp-head" id="twp-head">選擇時間</div>
+        <div class="twp-area">
+          <div class="twp-center-line"></div>
+          <div class="twp-col" id="twp-hour-col"></div>
+          <div class="twp-colon">:</div>
+          <div class="twp-col" id="twp-min-col"></div>
+        </div>
+        <div class="twp-foot">
+          <button type="button" class="twp-clear" onclick="clearTimeWheel()">清空</button>
+          <div class="twp-hint">上下滑動選擇 · 00-05為凌晨延伸</div>
+          <button type="button" class="twp-confirm" onclick="confirmTimeWheel()">確認</button>
+        </div>
+      </div>
+    </div>
     <div class="fr"><label class="fl">事件名稱 / 地點</label><input class="fi" id="ev-place" type="text" placeholder="例：高千穗峽、午餐、高鐵" oninput="updateMapLink(this.value)"></div>
     <div style="display:flex;align-items:center;gap:8px;margin:-4px 0 8px;">
       <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink3);cursor:pointer;user-select:none;">
