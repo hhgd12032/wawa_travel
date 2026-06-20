@@ -1824,30 +1824,52 @@ function buildSearchIndex(){
 
 // ── EXPORT / IMPORT ──
 function exportData(){
-  const data={trips:getTrips(),settings:getSettings(),exportedAt:new Date().toISOString()};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`旅行記憶庫_${todayStr()}.json`;a.click();
-  showToast('已匯出 JSON');
+  try{
+    const data={trips:getTrips(),settings:getSettings(),exportedAt:new Date().toISOString()};
+    const json=JSON.stringify(data,null,2);
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    // 使用固定存在於DOM中的<a>元素，避免動態建立節點在iOS Safari上click()失效
+    let a=document.getElementById('export-link');
+    if(!a){
+      a=document.createElement('a');
+      a.id='export-link';
+      a.style.display='none';
+      document.body.appendChild(a);
+    }
+    a.href=url;
+    a.download='旅行記憶庫_'+todayStr()+'.json';
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    showToast('已匯出 JSON，請查看下載項目');
+  }catch(err){
+    showToast('匯出失敗：'+(err.message||'未知錯誤'));
+  }
 }
 
 function importData(){
-  const inp=document.createElement('input');inp.type='file';inp.accept='.json';
-  inp.onchange=e=>{
-    const file=e.target.files[0];if(!file)return;
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      try{
-        const data=JSON.parse(ev.target.result);
-        if(data.trips)saveTrips(data.trips);
-        if(data.settings)saveSettings(data.settings);
-        showToast('匯入成功！');
-        renderHome();renderTripList();
-      }catch{showToast('匯入失敗，請確認 JSON 格式');}
-    };
-    reader.readAsText(file);
+  const inp=document.getElementById('json-file-input');
+  if(inp)inp.click();
+}
+function onJsonFileChange(e){
+  const file=e.target.files&&e.target.files[0];
+  e.target.value='';
+  if(!file){showToast('未選擇檔案');return;}
+  showToast('讀取中...');
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(data.trips)saveTrips(data.trips);
+      if(data.settings)saveSettings(data.settings);
+      showToast('✓ 匯入成功！');
+      renderHome();renderTripList();
+    }catch(err){
+      showToast('匯入失敗，請確認 JSON 格式');
+    }
   };
-  inp.click();
+  reader.onerror=function(){showToast('讀取檔案失敗');};
+  reader.readAsText(file);
 }
 
 // ── SETTINGS ──
@@ -2406,6 +2428,24 @@ function importFromExcel(data){
 
 
 
+function syncEndTime(startVal){
+  const endEl=document.getElementById('ev-end');
+  // 只在結束時間是空的時候自動填入開始時間
+  if(endEl&&!endEl.value){
+    endEl.value=startVal;
+  }
+}
+function toggleMapLink(){
+  const chk=document.getElementById('ev-map-check');
+  const link=document.getElementById('map-link');
+  if(!link)return;
+  if(chk&&chk.checked){
+    link.style.display='inline-flex';
+    updateMapLink(document.getElementById('ev-place')?document.getElementById('ev-place').value:'');
+  } else {
+    link.style.display='none';
+  }
+}
 </script>
 </head>
 <body>
@@ -2909,7 +2949,9 @@ function importFromExcel(data){
     <div class="card" style="margin-bottom:11px;padding:4px 11px;">
       <div class="setr" onclick="exportData()"><div class="setl"><div class="setic" style="background:var(--mint);"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><div><div class="setlb">匯出 JSON</div><div class="setsb">備份所有資料</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       <div class="setr" onclick="importData()"><div class="setl"><div class="setic" style="background:var(--blue);"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><div><div class="setlb">匯入 JSON</div><div class="setsb">還原備份</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      <label for="xlsx-file-input" class="setr" style="border-bottom:none;cursor:pointer;position:relative;overflow:hidden;"><div class="setl"><div class="setic" style="background:#E8FFE8;"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="setlb">匯入 Excel</div><div class="setsb">支援你的行程格式</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></label><input type="file" id="xlsx-file-input" accept=".xlsx,.xls" onchange="onXlsxFileChange(event)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;-webkit-appearance:none;">
+      <input type="file" id="json-file-input" accept=".json" onchange="onJsonFileChange(event)" style="display:none;">
+      <div class="setr" style="border-bottom:none;cursor:pointer;" onclick="document.getElementById('xlsx-file-input').click()"><div class="setl"><div class="setic" style="background:#E8FFE8;"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="setlb">匯入 Excel</div><div class="setsb">支援你的行程格式</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      <input type="file" id="xlsx-file-input" accept=".xlsx,.xls" onchange="onXlsxFileChange(event)" style="display:none;">
     </div>
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">危險區域</div>
     <div class="card" style="margin-bottom:20px;padding:4px 11px;">
@@ -3171,23 +3213,4 @@ function importFromExcel(data){
   </div>
 </div>
 </body>
-</html
-function syncEndTime(startVal){
-  const endEl=document.getElementById('ev-end');
-  // 只在結束時間是空的時候自動填入開始時間
-  if(endEl&&!endEl.value){
-    endEl.value=startVal;
-  }
-}
-function toggleMapLink(){
-  const chk=document.getElementById('ev-map-check');
-  const link=document.getElementById('map-link');
-  if(!link)return;
-  if(chk&&chk.checked){
-    link.style.display='inline-flex';
-    updateMapLink(document.getElementById('ev-place')?document.getElementById('ev-place').value:'');
-  } else {
-    link.style.display='none';
-  }
-}
->
+</html>
