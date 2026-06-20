@@ -2232,14 +2232,13 @@ function setTimeInputs(prefix,timeStr,forceExtended){
 }
 
 function onXlsxFileChange(e){
-  alert('change事件已觸發！');
   const inp=e.target;
   const file=inp&&inp.files&&inp.files[0];
-  alert('檔案物件：'+(file?file.name:'無檔案'));
   if(!file){
-    showToast('未取得檔案，請重試');
+    alert('沒有取得檔案。files.length='+(inp&&inp.files?inp.files.length:'undefined'));
     return;
   }
+  alert('成功取得檔案：'+file.name);
   showToast('已選擇檔案，處理中...');
   processExcelFile(file).finally(()=>{
     try{inp.value='';}catch(err){}
@@ -2959,7 +2958,7 @@ function toggleMapLink(){
       <div class="setr" onclick="importData()"><div class="setl"><div class="setic" style="background:var(--blue);"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><div><div class="setlb">匯入 JSON</div><div class="setsb">還原備份</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       <input type="file" id="json-file-input" accept=".json" onchange="onJsonFileChange(event)" style="display:none;">
       <div class="setr" style="border-bottom:none;flex-direction:column;align-items:flex-start;gap:8px;"><div class="setl"><div class="setic" style="background:#E8FFE8;"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="setlb">匯入 Excel</div><div class="setsb">支援你的行程格式</div></div></div>
-        <input type="file" id="xlsx-file-input" accept=".xlsx,.xls" onchange="onXlsxFileChange(event)" style="width:100%;padding:8px;border:1px solid rgba(0,0,0,.15);border-radius:6px;font-size:12px;">
+        <input type="file" id="xlsx-file-input" onchange="onXlsxFileChange(event)" style="width:100%;padding:8px;border:1px solid rgba(0,0,0,.15);border-radius:6px;font-size:12px;">
       </div>
     </div>
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">危險區域</div>
