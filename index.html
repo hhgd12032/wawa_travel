@@ -2393,14 +2393,15 @@ function setTimeInputs(prefix,timeStr,forceExtended){
 }
 
 
+function dbgLog(msg){
+  const debugEl=document.getElementById('xlsx-debug-info');
+  if(debugEl)debugEl.textContent='[除錯] '+msg+' ('+new Date().toLocaleTimeString()+')';
+}
 function onXlsxFileChange(input){
   const file=input.files[0];
-  const debugEl=document.getElementById('xlsx-debug-info');
-  if(debugEl){
-    debugEl.textContent='[除錯] onchange已觸發, 檔名='+(file?file.name:'無')+', 時間='+new Date().toLocaleTimeString();
-  }
-  if(!file){showToast('未選擇檔案');return;}
-  showToast('讀取中...');
+  dbgLog('change觸發, 檔名='+(file?file.name:'無'));
+  if(!file){return;}
+  dbgLog('開始處理: '+file.name);
   processExcelFile(file);
   input.value='';
 }
@@ -2411,27 +2412,33 @@ function importExcel(){
 }
 
 async function processExcelFile(file){
-  showToast('讀取中...');
+  dbgLog('processExcelFile啟動');
   try{
+    dbgLog('檢查XLSX函式庫, typeof='+typeof XLSX);
     if(typeof XLSX==='undefined'){
-      showToast('載入解析器中...');
+      dbgLog('XLSX未定義,開始載入CDN...');
       await loadXlsxLib();
+      dbgLog('loadXlsxLib完成, typeof XLSX='+typeof XLSX);
     }
     if(typeof XLSX==='undefined'){
-      showToast('解析器載入失敗，請檢查網路後重試');
+      dbgLog('❌ XLSX載入失敗,請檢查網路');
       return;
     }
-    showToast('解析檔案中...');
+    dbgLog('讀取檔案內容中...');
     const buf=await file.arrayBuffer();
+    dbgLog('檔案讀取完成,大小='+buf.byteLength+'bytes,開始XLSX.read...');
     const wb=XLSX.read(buf,{type:'array',cellDates:true});
+    dbgLog('XLSX.read完成,工作表='+wb.SheetNames.join(','));
     const result=parseMyExcel(wb,file.name);
+    dbgLog('parseMyExcel完成,result='+(result?'有資料':'null'));
     if(result){
       importFromExcel(result);
+      dbgLog('✅ importFromExcel完成！');
     } else {
-      showToast('找不到可匯入的資料，請確認檔案格式');
+      dbgLog('❌ 找不到可匯入的資料');
     }
   }catch(err){
-    showToast('匯入失敗：'+(err&&err.message?err.message:String(err)));
+    dbgLog('❌ 錯誤: '+(err&&err.message?err.message:String(err)));
   }
 }
 
@@ -2712,7 +2719,7 @@ function toggleMapLink(){
           </div>
           <input type="hidden" id="idea-pax">
         </div>
-        <button class="btn bink" onclick="saveIdea()" style="width:100%;padding:11px;border-radius:var(--rl);margin-top:6px;">儲存構想</button>
+        <button class="btn bink" onclick="saveIdea()" style="width:100%;padding:11px;border-radius:var(--rl);margin-top:6px;margin-bottom:10px;">儲存構想</button>
       </div>
     </div>
 
