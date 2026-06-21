@@ -1204,7 +1204,7 @@ function setEl(id,val){const e=document.getElementById(id);if(e)e.textContent=va
 function renderTripList(){
   const trips=getTrips();
   buildFilterRow(trips);
-  renderFilteredTrips(trips);
+  renderFilteredTrips(getFilteredTrips());
   // update subtitle
   const el=document.getElementById('trips-subtitle');
   if(el){
@@ -1272,25 +1272,37 @@ function closeDrops(){
 function filterTrips(key,btn){
   activeFilter=key;
   const trips=getTrips();
-  let filtered=trips;
-  if(key!=='all'){
-    if(key.startsWith('country:')){const c=key.slice(8);filtered=trips.filter(t=>t.country===c);}
-    else if(key.startsWith('year:')){const y=key.slice(5);filtered=trips.filter(t=>t.startDate?.slice(0,4)===y);}
-  }
-  renderFilteredTrips(filtered);
-  // 重建 filter row 更新按鈕狀態
+  renderFilteredTrips(getFilteredTrips());
   buildFilterRow(trips);
 }
 
+let tripSortOrder='newest'; // 'newest' = 時間新到舊, 'oldest' = 時間舊到新
+function setTripSort(order){
+  tripSortOrder=order;
+  document.getElementById('sort-newest')?.classList.toggle('on',order==='newest');
+  document.getElementById('sort-oldest')?.classList.toggle('on',order==='oldest');
+  renderFilteredTrips(getFilteredTrips());
+}
+function getFilteredTrips(){
+  const trips=getTrips();
+  if(activeFilter==='all')return trips;
+  if(activeFilter.startsWith('country:')){const c=activeFilter.slice(8);return trips.filter(t=>t.country===c);}
+  if(activeFilter.startsWith('year:')){const y=activeFilter.slice(5);return trips.filter(t=>t.startDate?.slice(0,4)===y);}
+  return trips;
+}
 function renderFilteredTrips(trips){
   const el=document.getElementById('trip-list-container');
   if(!el)return;
-  // trips 在呼叫前已經由 filterTrips() 正確篩選過，這裡不再重複篩選
   if(trips.length===0){
     el.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg><div class="et">沒有符合的旅行</div></div>`;
     return;
   }
-  el.innerHTML=trips.slice().reverse().map(t=>tripCardHTML(t,`openTrip('${t.id}')`)).join('');
+  // 依旅行開始日期排序：newest=新到舊(最新在前), oldest=舊到新(最舊在前)
+  const sorted=trips.slice().sort((a,b)=>{
+    const da=a.startDate||'';const db=b.startDate||'';
+    return tripSortOrder==='newest'?db.localeCompare(da):da.localeCompare(db);
+  });
+  el.innerHTML=sorted.map(t=>tripCardHTML(t,`openTrip('${t.id}')`)).join('');
 }
 
 // ── RENDER: Trip Detail ──
@@ -2762,33 +2774,35 @@ function toggleMapLink(){
 
     <!-- 旅行構想 sheet -->
     <div class="ov" id="idea-ov" onclick="closeBg(event,'idea-ov')">
-      <div class="sh">
+      <div class="sh" style="display:flex;flex-direction:column;max-height:88vh;overflow-y:hidden;padding-bottom:0;">
         <div class="shndl"></div>
         <button class="shx" onclick="closeSh('idea-ov')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         <div class="shtl" id="idea-sh-title">新增旅行構想</div>
-        <div class="fr"><label class="fl">想去的地方</label><input class="fi" id="idea-place" type="text" placeholder="例：北海道、義大利..."></div>
-        <div style="font-size:12px;font-weight:800;color:var(--ink3);margin-bottom:8px;">時間</div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:10px;cursor:pointer;">
-          <input type="checkbox" id="idea-undated" onchange="toggleIdeaDateMode()" style="width:14px;height:14px;">
-          時間未定
-        </label>
-        <div class="f2c fr" id="idea-date-row">
-          <div><label class="fl">開始（可留空）</label><input class="fi" id="idea-start" type="date"></div>
-          <div><label class="fl">結束（可留空）</label><input class="fi" id="idea-end" type="date"></div>
-        </div>
-        <div style="font-size:12px;font-weight:800;color:var(--ink3);margin-bottom:8px;">規劃狀態</div>
-        <div class="trow" id="idea-status-row" style="margin-bottom:14px;">
-          <button class="tbtn sel" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>做夢中</button>
-          <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>規劃中</button>
-          <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>確定成行</button>
-        </div>
-        <div class="fr"><label class="fl">旅伴</label>
-          <div class="ctw" id="idea-pax-wrap" onclick="document.getElementById('idea-pax-cin').focus()">
-            <input class="cin" id="idea-pax-cin" type="text" placeholder="輸入姓名按 Enter" onkeydown="addTagToWrap(event,'idea-pax-wrap','idea-pax')">
+        <div style="flex:1;overflow-y:auto;min-height:0;padding-right:2px;">
+          <div class="fr"><label class="fl">想去的地方</label><input class="fi" id="idea-place" type="text" placeholder="例：北海道、義大利..."></div>
+          <div style="font-size:12px;font-weight:800;color:var(--ink3);margin-bottom:8px;">時間</div>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:10px;cursor:pointer;">
+            <input type="checkbox" id="idea-undated" onchange="toggleIdeaDateMode()" style="width:14px;height:14px;flex-shrink:0;">
+            時間未定
+          </label>
+          <div id="idea-date-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px;">
+            <div style="min-width:0;"><label class="fl">開始（可留空）</label><input class="fi" id="idea-start" type="date" style="width:100%;min-width:0;box-sizing:border-box;display:block;"></div>
+            <div style="min-width:0;"><label class="fl">結束（可留空）</label><input class="fi" id="idea-end" type="date" style="width:100%;min-width:0;box-sizing:border-box;display:block;"></div>
           </div>
-          <input type="hidden" id="idea-pax">
+          <div style="font-size:12px;font-weight:800;color:var(--ink3);margin-bottom:8px;">規劃狀態</div>
+          <div class="trow" id="idea-status-row" style="margin-bottom:14px;">
+            <button class="tbtn sel" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>做夢中</button>
+            <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>規劃中</button>
+            <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>確定成行</button>
+          </div>
+          <div class="fr"><label class="fl">旅伴</label>
+            <div class="ctw" id="idea-pax-wrap" onclick="document.getElementById('idea-pax-cin').focus()">
+              <input class="cin" id="idea-pax-cin" type="text" placeholder="輸入姓名按 Enter" onkeydown="addTagToWrap(event,'idea-pax-wrap','idea-pax')">
+            </div>
+            <input type="hidden" id="idea-pax">
+          </div>
         </div>
-        <button class="btn bink" onclick="saveIdea()" style="width:100%;padding:11px;border-radius:var(--rl);margin-top:6px;margin-bottom:10px;">儲存構想</button>
+        <button class="btn bink" onclick="saveIdea()" style="width:100%;padding:13px;border-radius:var(--rl);margin-top:10px;margin-bottom:18px;flex-shrink:0;">儲存構想</button>
       </div>
     </div>
 
@@ -2816,10 +2830,20 @@ function toggleMapLink(){
              margin-bottom:12px;">
       ＋ 新增旅行
     </button>
-    <div class="frow" id="filter-row" style="flex-wrap:wrap;gap:5px;">
-      <span class="fchip on" onclick="filterTrips('all',this)">全部</span>
-      <span id="trip-country-chips"></span>
-      <span id="trip-year-chips"></span>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:4px;">
+      <div class="frow" id="filter-row" style="flex-wrap:wrap;gap:5px;flex:1;">
+        <span class="fchip on" onclick="filterTrips('all',this)">全部</span>
+        <span id="trip-country-chips"></span>
+        <span id="trip-year-chips"></span>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0;">
+        <button type="button" id="sort-newest" onclick="setTripSort('newest')" class="fchip on" style="display:flex;align-items:center;gap:3px;font-size:10px;border:none;cursor:pointer;font-family:inherit;">
+          <svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>新到舊
+        </button>
+        <button type="button" id="sort-oldest" onclick="setTripSort('oldest')" class="fchip" style="display:flex;align-items:center;gap:3px;font-size:10px;border:none;cursor:pointer;font-family:inherit;">
+          <svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>舊到新
+        </button>
+      </div>
     </div>
     <div id="trip-list-container"></div>
     <div style="height:16px;"></div>
