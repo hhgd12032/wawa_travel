@@ -2393,21 +2393,16 @@ function setTimeInputs(prefix,timeStr,forceExtended){
 }
 
 
-function onXlsxFileChange(e){
-  const inp=e.target;
+function onXlsxFileChange(input){
+  const file=input.files[0];
   const debugEl=document.getElementById('xlsx-debug-info');
-  const fileCount=inp&&inp.files?inp.files.length:-1;
-  const file=inp&&inp.files&&inp.files[0];
   if(debugEl){
-    debugEl.textContent='[除錯] onchange已觸發, files.length='+fileCount+', 檔名='+(file?file.name:'無')+', 時間='+new Date().toLocaleTimeString();
+    debugEl.textContent='[除錯] onchange已觸發, 檔名='+(file?file.name:'無')+', 時間='+new Date().toLocaleTimeString();
   }
-  if(!file){
-    return;
-  }
-  showToast('已選擇檔案，處理中...');
-  processExcelFile(file).finally(()=>{
-    // 不清空 inp.value，方便確認狀態
-  });
+  if(!file){showToast('未選擇檔案');return;}
+  showToast('讀取中...');
+  processExcelFile(file);
+  input.value='';
 }
 function importExcel(){
   // 保留此函式以防其他地方呼叫；實際觸發已改用 <label for="xlsx-file-input">
@@ -3145,13 +3140,16 @@ function toggleMapLink(){
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">資料</div>
     <div class="card" style="margin-bottom:11px;padding:4px 11px;">
       <div class="setr" onclick="exportData()"><div class="setl"><div class="setic" style="background:var(--mint);"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><div><div class="setlb">匯出 JSON</div><div class="setsb">備份所有資料</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      <div class="setr" onclick="importData()"><div class="setl"><div class="setic" style="background:var(--blue);"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><div><div class="setlb">匯入 JSON</div><div class="setsb">還原備份</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      <div class="setr" onclick="importData()" style="border-bottom:none;"><div class="setl"><div class="setic" style="background:var(--blue);"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><div><div class="setlb">匯入 JSON</div><div class="setsb">還原備份</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       <input type="file" id="json-file-input" accept=".json" onchange="onJsonFileChange(event)" style="display:none;">
-      <div class="setr" style="border-bottom:none;flex-direction:column;align-items:flex-start;gap:8px;"><div class="setl"><div class="setic" style="background:#E8FFE8;"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="setlb">匯入 Excel</div><div class="setsb">支援你的行程格式</div></div></div>
-        <input type="file" id="xlsx-input-v2" onchange="onXlsxFileChange(event)" style="width:100%;padding:8px;border:1px solid rgba(0,0,0,.15);border-radius:6px;font-size:12px;">
-        <div id="xlsx-debug-info" style="margin-top:6px;font-size:11px;color:#e05500;font-weight:700;min-height:16px;"></div>
-      </div>
     </div>
+
+    <!-- 匯入 Excel — 完全比照已驗證可行的 JSON 匯入模式：display:none input + onclick觸發 -->
+    <div class="card" style="margin-bottom:11px;padding:4px 11px;">
+      <div class="setr" onclick="document.getElementById('xlsx-input-v2').click()" style="border-bottom:none;"><div class="setl"><div class="setic" style="background:#E8FFE8;"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="setlb">匯入 Excel</div><div class="setsb">支援你的行程格式</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      <input type="file" id="xlsx-input-v2" accept=".xlsx,.xls" onchange="onXlsxFileChange(this)" style="display:none">
+    </div>
+    <div id="xlsx-debug-info" style="margin:-6px 0 11px 4px;font-size:11px;color:#e05500;font-weight:700;min-height:16px;"></div>
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">危險區域</div>
     <div class="card" style="margin-bottom:20px;padding:4px 11px;">
       <div class="setr" style="border-bottom:none;" onclick="doClearAllData()"><div class="setl"><div class="setic" style="background:#FFE0CC;"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div><div><div class="setlb" style="color:var(--orange);">清除所有資料</div><div class="setsb">清空 LocalStorage</div></div></div></div>
