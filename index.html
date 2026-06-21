@@ -158,7 +158,7 @@ svg{display:block;}
 .dtbadge{font-size:10px;font-weight:800;color:var(--orange);}
 .dtheme{font-size:12px;font-weight:800;margin-bottom:4px;}
 .dchips{display:flex;gap:4px;flex-wrap:wrap;}
-.dchip{background:var(--bg);border:1.5px solid var(--ink);border-radius:99px;padding:2px 7px;font-size:10px;font-weight:700;}
+.dchip{background:var(--bg);border:1.5px solid var(--ink);border-radius:99px;padding:3px 9px;font-size:12px;font-weight:700;}
 
 /* TIMELINE */
 .tlw{padding:11px 16px;}
@@ -281,7 +281,8 @@ svg{display:block;}
 .fr{margin-bottom:9px;}
 .fl{display:block;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px;}
 .fi{width:100%;min-width:0;box-sizing:border-box;padding:9px 11px;border:var(--bd);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--ink);background:var(--white);outline:none;}
-.fi[type="date"],.fi[type="time"]{appearance:none;-webkit-appearance:none;font-size:12px;padding:9px 6px;}
+.fi[type="date"]{font-size:13px;padding:9px 11px;min-height:42px;box-sizing:border-box;}
+.fi[type="time"]{appearance:none;-webkit-appearance:none;font-size:12px;padding:9px 6px;}
 .fi:focus{background:#FFFAE8;}
 .f2c{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:0;}
 .f2c>div{min-width:0;} .f2c .fi{min-width:0;}
@@ -591,11 +592,16 @@ function renderPassport(){
   setEl('pp-stat-countries',countries);
   setEl('pp-stat-days',days);
 
-  // Update home badge
-  const badgeAv=document.getElementById('badge-av-icon');
-  if(badgeAv){badgeAv.innerHTML=ppIconSvg(icon,18);badgeAv.style.background=color;}
-  setEl('badge-name-disp',name);
-  setEl('badge-trips-disp',tripCount+' TRIPS');
+  // Update home page 完整護照卡（取代原hero）
+  const homePpAv=document.getElementById('home-pp-avatar-icon');
+  if(homePpAv){homePpAv.innerHTML=ppIconSvg(icon,28);homePpAv.style.background=color;}
+  const homePpHeadIcon=document.getElementById('home-pp-head-icon');
+  if(homePpHeadIcon)homePpHeadIcon.innerHTML=ppIconSvg(icon,14);
+  setEl('home-pp-name-disp',name);
+  setEl('home-pp-bio-disp',bio?'"'+bio+'"':'');
+  setEl('home-pp-stat-trips',tripCount);
+  setEl('home-pp-stat-countries',countries);
+  setEl('home-pp-stat-days',days);
 
   // Mark selected icon/color in settings
   document.querySelectorAll('.icon-opt').forEach(o=>{
@@ -938,7 +944,7 @@ function tripCardHTML(trip, onclick=''){
   const totalStr=Object.keys(currTotals).map(c=>(CURRENCY_SYM[c]||c)+' '+currTotals[c].toLocaleString()).join(' · ');
 
   // 標籤
-  const tagHtml=splitTags(trip.tags).map(t=>`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:rgba(0,0,0,.07);color:#444;border:1px solid rgba(0,0,0,.12);font-family:'Courier New',Courier,monospace;">${t}</span>`).join('');
+  const tagHtml=splitTags(trip.tags).map(t=>`<span style="font-size:13px;font-weight:700;padding:3px 8px;border-radius:3px;background:rgba(0,0,0,.07);color:#444;border:1px solid rgba(0,0,0,.12);font-family:'Courier New',Courier,monospace;">${t}</span>`).join('');
 
   // 旅伴
   const comps=trip.companions||[];
@@ -971,11 +977,11 @@ function tripCardHTML(trip, onclick=''){
       </div>`:''}
       ${trip.memo?`<div style="display:flex;align-items:center;padding:7px 14px;border-bottom:1px dashed rgba(0,0,0,.1);">
         <div style="font-size:7px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(0,0,0,.3);font-family:'Courier New',Courier,monospace;width:48px;flex-shrink:0;">MEMO</div>
-        <div style="font-size:11px;color:#111;font-weight:600;flex:1;">"${trip.memo}"</div>
+        <div style="font-size:13px;color:#111;font-weight:600;flex:1;">"${trip.memo}"</div>
       </div>`:''}
       <div style="display:flex;align-items:center;padding:7px 14px;">
         <div style="font-size:7px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(0,0,0,.3);font-family:'Courier New',Courier,monospace;width:48px;flex-shrink:0;">PAX</div>
-        <div style="font-size:11px;color:#111;font-weight:600;flex:1;">${compStr||'—'}</div>
+        <div style="font-size:13px;color:#111;font-weight:600;flex:1;">${compStr||'—'}</div>
         ${totalStr?`<div style="font-size:12px;font-weight:900;color:#111;flex-shrink:0;">${totalStr}</div>`:''}
       </div>
     </div>
@@ -1041,7 +1047,155 @@ function renderHome(){
     el.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg><div class="et">還沒有旅行紀錄</div><div class="es">點右下角 ＋ 開始建立第一趟旅行</div></div>`;
     return;
   }
-  el.innerHTML=trips.slice(-1).reverse().map(t=>tripCardHTML(t,`openTrip('${t.id}')`)).join('');
+  const latestTrip=trips.slice().sort((a,b)=>(b.startDate||'').localeCompare(a.startDate||''))[0];
+  el.innerHTML=latestTrip?tripCardHTML(latestTrip,`openTrip('${latestTrip.id}')`):'';
+
+  // 下次旅行清單：獨立待辦清單
+  renderNextTripIdeas();
+}
+
+// ── 下次旅行清單：獨立待辦，存於 LocalStorage（與旅行本體無關）──
+function getNextTripIdeas(){
+  try{return JSON.parse(localStorage.getItem('ptk_next_trip_ideas')||'[]');}catch(e){return [];}
+}
+function saveNextTripIdeas(arr){
+  localStorage.setItem('ptk_next_trip_ideas',JSON.stringify(arr));
+}
+let editingIdeaId=null;
+
+function openNewIdea(){
+  editingIdeaId=null;
+  resetIdeaForm();
+  document.getElementById('idea-sh-title').textContent='新增旅行構想';
+  openSh('idea-ov');
+}
+function resetIdeaForm(){
+  v('idea-place','');v('idea-start','');v('idea-end','');
+  const undated=document.getElementById('idea-undated');if(undated)undated.checked=false;
+  toggleIdeaDateMode();
+  document.querySelectorAll('#idea-status-row .tbtn').forEach((b,i)=>b.classList.toggle('sel',i===0));
+  const pw=document.getElementById('idea-pax-wrap');
+  if(pw){
+    pw.querySelectorAll('.ctag').forEach(t=>t.remove());
+  }
+  v('idea-pax','');
+}
+function toggleIdeaDateMode(){
+  const undated=document.getElementById('idea-undated');
+  const row=document.getElementById('idea-date-row');
+  if(!row)return;
+  row.style.display=undated&&undated.checked?'none':'';
+}
+function editNextTripIdea(id){
+  const ideas=getNextTripIdeas();
+  const item=ideas.find(i=>i.id===id);
+  if(!item)return;
+  editingIdeaId=id;
+  document.getElementById('idea-sh-title').textContent='編輯旅行構想';
+  v('idea-place',item.place||'');
+  const undated=document.getElementById('idea-undated');
+  if(undated)undated.checked=!!item.undated;
+  toggleIdeaDateMode();
+  v('idea-start',item.startDate||'');
+  v('idea-end',item.endDate||'');
+  document.querySelectorAll('#idea-status-row .tbtn').forEach(b=>{
+    b.classList.toggle('sel',b.textContent.trim()===item.status);
+  });
+  const pw=document.getElementById('idea-pax-wrap');
+  const pcin=document.getElementById('idea-pax-cin');
+  if(pw&&pcin){
+    pw.innerHTML='';pw.appendChild(pcin);pcin.value='';
+    (item.pax||[]).forEach(p=>{
+      const tag=document.createElement('span');tag.className='ctag';
+      tag.setAttribute('data-tag',p);
+      tag.innerHTML='<span class="ctag-name">'+p+'</span><button class="ctrm" onclick="this.parentElement.remove();syncHiddenTags(\'idea-pax\',\'idea-pax-wrap\')">×</button>';
+      pw.insertBefore(tag,pcin);
+    });
+    syncHiddenTags('idea-pax','idea-pax-wrap');
+  }
+  openSh('idea-ov');
+}
+function saveIdea(){
+  syncHiddenTags('idea-pax','idea-pax-wrap');
+  const place=gv('idea-place');
+  if(!place){showToast('請輸入想去的地方');return;}
+  const undated=document.getElementById('idea-undated')?.checked||false;
+  const statusBtn=document.querySelector('#idea-status-row .tbtn.sel');
+  const status=statusBtn?statusBtn.textContent.trim():'做夢中';
+  const pax=gv('idea-pax').split(' ').filter(Boolean);
+  const ideas=getNextTripIdeas();
+  if(editingIdeaId){
+    const item=ideas.find(i=>i.id===editingIdeaId);
+    if(item){
+      item.place=place;item.undated=undated;
+      item.startDate=undated?'':gv('idea-start');
+      item.endDate=undated?'':gv('idea-end');
+      item.status=status;item.pax=pax;
+    }
+  } else {
+    ideas.push({id:uid(),place,undated,startDate:undated?'':gv('idea-start'),endDate:undated?'':gv('idea-end'),status,pax,createdAt:Date.now()});
+  }
+  saveNextTripIdeas(ideas);
+  closeSh('idea-ov');
+  renderNextTripIdeas();
+  showToast('✓ 已儲存');
+}
+let deletingIdeaId=null;
+function deleteNextTripIdea(id){
+  deletingIdeaId=id;
+  openSh('confirm-delete-idea-ov');
+}
+function confirmDeleteIdea(){
+  if(!deletingIdeaId)return;
+  const ideas=getNextTripIdeas().filter(i=>i.id!==deletingIdeaId);
+  saveNextTripIdeas(ideas);
+  deletingIdeaId=null;
+  closeSh('confirm-delete-idea-ov');
+  renderNextTripIdeas();
+  showToast('✓ 已刪除');
+}
+function renderNextTripIdeas(){
+  const container=document.getElementById('next-trips-container');
+  if(!container)return;
+  const ideas=getNextTripIdeas().slice().reverse();
+  if(ideas.length===0){
+    container.innerHTML='<div style="font-size:12px;color:var(--ink3);padding:10px 4px;">還沒有想法，點上方按鈕新增一個吧</div>';
+    return;
+  }
+  const statusColor={'做夢中':'#C8B4F8','規劃中':'#4DBFFF','確定成行':'#3DD6C0'};
+  const statusIcon={
+    '做夢中':'<svg width="10" height="10" viewBox="0 0 24 24" stroke="#111" fill="none" stroke-width="2.5" style="display:inline-block;vertical-align:-1px;margin-right:3px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+    '規劃中':'<svg width="10" height="10" viewBox="0 0 24 24" stroke="#111" fill="none" stroke-width="2.5" style="display:inline-block;vertical-align:-1px;margin-right:3px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+    '確定成行':'<svg width="10" height="10" viewBox="0 0 24 24" stroke="#111" fill="none" stroke-width="2.5" style="display:inline-block;vertical-align:-1px;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>'
+  };
+  container.innerHTML=ideas.map(item=>{
+    const dateStr=item.undated?'時間未定':([item.startDate?fmtDate(item.startDate):'',item.endDate?fmtDate(item.endDate):''].filter(Boolean).join(' – ')||'時間未定');
+    const paxIconSvg='<svg width="11" height="11" viewBox="0 0 24 24" stroke="#888" fill="none" stroke-width="2" style="display:inline-block;vertical-align:-1px;margin-right:3px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+  const paxStr=(item.pax||[]).length?paxIconSvg+item.pax.join('、'):'';
+    return `<div style="padding:10px 12px;border:1.5px solid rgba(0,0,0,.15);border-radius:8px;margin-bottom:8px;background:#fff;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:4px;">
+        <div style="font-size:13px;font-weight:900;color:#111;flex:1;min-width:0;display:flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" stroke="#111" fill="none" stroke-width="2" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${item.place}</div>
+        <div style="display:flex;gap:4px;flex-shrink:0;">
+          <button onclick="editNextTripIdea('${item.id}')" style="width:24px;height:24px;border-radius:6px;border:1.5px solid var(--ink);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <svg width="10" height="10" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button onclick="deleteNextTripIdea('${item.id}')" style="width:24px;height:24px;border-radius:6px;border:1.5px solid var(--ink);background:#FFE0CC;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <svg width="10" height="10" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--ink3);margin-bottom:6px;">${dateStr}${paxStr?' · '+paxStr:''}</div>
+      <span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:${statusColor[item.status]||'#eee'};">${statusIcon[item.status]||''}${item.status||'做夢中'}</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleNextTrips(){
+  const panel=document.getElementById('next-trips-panel');
+  const tog=document.getElementById('next-trips-tog');
+  if(!panel)return;
+  panel.classList.toggle('show');
+  if(tog)tog.classList.toggle('open');
 }
 
 function setEl(id,val){const e=document.getElementById(id);if(e)e.textContent=val;}
@@ -1131,15 +1285,12 @@ function filterTrips(key,btn){
 function renderFilteredTrips(trips){
   const el=document.getElementById('trip-list-container');
   if(!el)return;
-  let filtered=trips;
-  if(activeFilter!=='all'){
-    filtered=trips.filter(t=>t.country===activeFilter||t.startDate?.startsWith(activeFilter));
-  }
-  if(filtered.length===0){
+  // trips 在呼叫前已經由 filterTrips() 正確篩選過，這裡不再重複篩選
+  if(trips.length===0){
     el.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg><div class="et">沒有符合的旅行</div></div>`;
     return;
   }
-  el.innerHTML=filtered.slice().reverse().map(t=>tripCardHTML(t,`openTrip('${t.id}')`)).join('');
+  el.innerHTML=trips.slice().reverse().map(t=>tripCardHTML(t,`openTrip('${t.id}')`)).join('');
 }
 
 // ── RENDER: Trip Detail ──
@@ -1296,7 +1447,7 @@ function renderDayList(){
           <div onclick="openDay('${day.id}')" style="cursor:pointer;flex:1;min-width:0;">
             <div style="display:flex;align-items:baseline;gap:4px;flex-wrap:wrap;">
               <span style="font-size:11px;color:var(--ink3);font-weight:600;flex-shrink:0;">${fmtDate(day.date)}(${weekday})</span>
-              <span style="font-size:12px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${day.theme||'（未填主題）'}</span>
+              <span style="font-size:14px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${day.theme||'（未填主題）'}</span>
               ${isToday?'<span class="dtbadge" style="font-size:10px;">今天的回憶</span>':''}
             </div>
           </div>
@@ -1365,7 +1516,7 @@ function renderExpenses(){
         <div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06);">
           <div class="expic" style="background:${catBg[e.cat]||'#EEE'};margin-right:9px;width:28px;height:28px;">${catIcon[e.cat]||catIcon['其他']}</div>
           <div style="flex:1;">
-            <div style="font-size:12px;font-weight:800;">${e.name||'費用'}</div>
+            <div style="font-size:14px;font-weight:800;">${e.name||'費用'}</div>
             ${expSortMode==='date'?`<div class="cap">${e.cat||''}</div>`:`<div class="cap">${e.date||''}</div>`}
             ${e.note?`<div style="font-size:10px;color:var(--ink3);">📝 ${e.note}</div>`:''}
           </div>
@@ -1658,6 +1809,16 @@ function saveTrip(){
   renderTripList();
 }
 
+
+function openNewTrip(){
+  resetTripForm();
+  // 重置標題與儲存按鈕，避免殘留編輯模式的文字與行為
+  const title=document.querySelector('#trip-ov .shtl');
+  if(title)title.textContent='新增旅行';
+  const saveBtn=document.getElementById('trip-save-btn');
+  if(saveBtn){saveBtn.textContent='儲存旅行';saveBtn.onclick=saveTrip;}
+  openSh('trip-ov');
+}
 function resetTripForm(){
   ['t-name','t-start','t-end','t-country','t-city','t-tags','t-memo'].forEach(id=>v(id,''));
   const tw=document.getElementById('t-tags-wrap');if(tw)tw.querySelectorAll('.ctag').forEach(t=>t.remove());
@@ -2232,17 +2393,13 @@ function setTimeInputs(prefix,timeStr,forceExtended){
 }
 
 
-function testNamedFunction(e){
-  alert('C成功！透過具名function，檔名：'+(e.target.files[0]?e.target.files[0].name:'無'));
-}
 function onXlsxFileChange(e){
   const inp=e.target;
   const file=inp&&inp.files&&inp.files[0];
   if(!file){
-    alert('沒有取得檔案。files.length='+(inp&&inp.files?inp.files.length:'undefined'));
+    showToast('未取得檔案，請重試');
     return;
   }
-  alert('成功取得檔案：'+file.name);
   showToast('已選擇檔案，處理中...');
   processExcelFile(file).finally(()=>{
     try{inp.value='';}catch(err){}
@@ -2250,7 +2407,7 @@ function onXlsxFileChange(e){
 }
 function importExcel(){
   // 保留此函式以防其他地方呼叫；實際觸發已改用 <label for="xlsx-file-input">
-  const inp=document.getElementById('xlsx-file-input');
+  const inp=document.getElementById('xlsx-input-v2');
   if(inp)inp.click();
 }
 
@@ -2458,57 +2615,45 @@ function toggleMapLink(){
 
 <!-- ══ HOME ══ -->
 <div id="page-home" class="page active">
-  <!-- PHDR: 方案C — 米色斜線 + TRAVEL RECEIPT -->
-  <div class="phdr" style="background:#fff;border-bottom:1px solid rgba(0,0,0,.08);padding:52px 16px 0;">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:12px;">
-      <div style="flex:1;">
+  <!-- 護照取代原本的hero -->
+  <div class="phdr" style="background:#fff;border-bottom:1px solid rgba(0,0,0,.08);padding:52px 16px 14px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div>
         <div style="font-size:8px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(0,0,0,.4);font-family:'Courier New',Courier,monospace;margin-bottom:3px;">TRAVEL RECEIPT  ·  記憶庫</div>
-        <div style="font-size:20px;font-weight:900;color:#111;margin-bottom:4px;">嗨，<span class="user-greeting">旅行者</span></div>
-        <div style="font-size:11px;color:rgba(0,0,0,.45);font-style:italic;border-left:2px solid rgba(0,0,0,.2);padding-left:7px;" id="home-bio-disp"></div>
+        <div style="font-size:20px;font-weight:900;color:#111;">嗨，<span class="user-greeting">旅行者</span></div>
       </div>
-      <!-- 護照徽章 -->
-      <div class="pp-badge" style="margin-left:12px;cursor:pointer;" onclick="navigateTo('settings')">
-        <div class="pp-badge-top">
-          <div style="font-size:6px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(0,0,0,.65);font-family:'Courier New',Courier,monospace;">PASSPORT</div>
-        </div>
-        <div class="pp-badge-body">
-          <div class="pp-badge-av" id="badge-av-icon"></div>
-          <div style="font-size:9px;font-weight:900;color:#111;" id="badge-name-disp">旅行者</div>
-          <div style="font-size:7px;color:rgba(0,0,0,.45);font-family:'Courier New',Courier,monospace;margin-top:1px;" id="badge-trips-disp">0 TRIPS</div>
-        </div>
-      </div>
+      <button onclick="navigateTo('search')" style="width:34px;height:34px;padding:0;border-radius:50%;border:2px solid #111;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 #111;flex-shrink:0;">
+        <svg width="15" height="15" viewBox="0 0 24 24" stroke="#111" fill="none" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
     </div>
-    <!-- 虛線撕線 -->
-    <div style="display:flex;align-items:center;margin:0 -16px;">
-      <div style="width:14px;height:14px;border-radius:50%;background:var(--bg);flex-shrink:0;border:1.5px solid rgba(0,0,0,.2);margin-left:-7px;"></div>
-      <div style="flex:1;border-top:1.5px dashed rgba(0,0,0,.2);"></div>
-      <div style="width:14px;height:14px;border-radius:50%;background:var(--bg);flex-shrink:0;border:1.5px solid rgba(0,0,0,.2);margin-right:-7px;"></div>
+
+    <!-- 完整護照卡 -->
+    <div class="pp-card" style="margin-bottom:0;cursor:pointer;" onclick="navigateTo('settings')">
+      <div class="pp-stripe-head">
+        <div style="font-size:8px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:rgba(0,0,0,.7);font-family:'Courier New',Courier,monospace;">TRAVEL PASSPORT  ·  旅行記憶庫</div>
+        <div id="home-pp-head-icon"></div>
+      </div>
+      <div class="pp-body">
+        <div class="pp-holder">
+          <div class="pp-avatar" id="home-pp-avatar-icon"></div>
+          <div>
+            <div class="pp-info-label" style="color:#555;">PASSPORT HOLDER</div>
+            <div class="pp-name" id="home-pp-name-disp">旅行者</div>
+            <div class="pp-slogan" id="home-pp-bio-disp"></div>
+          </div>
+        </div>
+        <div class="pp-stats">
+          <div class="pp-sc" style="background:rgba(255,216,77,.2);"><div class="pp-sc-l" style="color:#555;">TRIPS</div><div class="pp-sc-n" id="home-pp-stat-trips">0</div></div>
+          <div class="pp-sc" style="background:rgba(77,191,255,.2);"><div class="pp-sc-l" style="color:#555;">CNTRY</div><div class="pp-sc-n" id="home-pp-stat-countries">0</div></div>
+          <div class="pp-sc" style="background:rgba(61,214,192,.2);"><div class="pp-sc-l" style="color:#555;">DAYS</div><div class="pp-sc-n" id="home-pp-stat-days">0</div></div>
+        </div>
+      </div>
     </div>
   </div>
 
   <div class="sa">
-    <!-- 橫排四格統計 — 淡色 -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);border:1.5px solid rgba(0,0,0,.15);border-radius:10px;overflow:hidden;margin-bottom:12px;background:#fff;">
-      <div style="padding:10px 6px;text-align:center;border-right:1px solid rgba(0,0,0,.08);">
-        <div style="font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(0,0,0,.35);font-family:'Courier New',Courier,monospace;margin-bottom:3px;">CNTRY</div>
-        <div style="font-size:20px;font-weight:900;font-family:'Courier New',Courier,monospace;letter-spacing:-1px;color:#111;" id="stat-countries">0</div>
-      </div>
-      <div style="padding:10px 6px;text-align:center;border-right:1px solid rgba(0,0,0,.08);">
-        <div style="font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(0,0,0,.35);font-family:'Courier New',Courier,monospace;margin-bottom:3px;">CITY</div>
-        <div style="font-size:20px;font-weight:900;font-family:'Courier New',Courier,monospace;letter-spacing:-1px;color:#111;" id="stat-cities">0</div>
-      </div>
-      <div style="padding:10px 6px;text-align:center;border-right:1px solid rgba(0,0,0,.08);">
-        <div style="font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(0,0,0,.35);font-family:'Courier New',Courier,monospace;margin-bottom:3px;">TRIPS</div>
-        <div style="font-size:20px;font-weight:900;font-family:'Courier New',Courier,monospace;letter-spacing:-1px;color:#111;" id="stat-trips">0</div>
-      </div>
-      <div style="padding:10px 6px;text-align:center;">
-        <div style="font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(0,0,0,.35);font-family:'Courier New',Courier,monospace;margin-bottom:3px;">DAYS</div>
-        <div style="font-size:20px;font-weight:900;font-family:'Courier New',Courier,monospace;letter-spacing:-1px;color:#111;" id="stat-days">0</div>
-      </div>
-    </div>
-
     <!-- Memory banner -->
-    <div class="mbanner" id="memory-banner" onclick="openMemoryTrip()" style="display:none;">
+    <div class="mbanner" id="memory-banner" onclick="openMemoryTrip()" style="display:none;margin-top:14px;">
       <div class="meye">今天的回憶</div>
       <div class="mtt" id="mem-title"></div>
       <div class="ms" id="mem-sub"></div>
@@ -2516,13 +2661,13 @@ function toggleMapLink(){
     </div>
 
     <!-- Welcome card -->
-    <div id="no-memory-card" style="display:none;border:2px solid #111;border-radius:10px;overflow:hidden;box-shadow:3px 3px 0 #111;margin-bottom:12px;background:#F7F3EC;">
+    <div id="no-memory-card" style="display:none;border:2px solid #111;border-radius:10px;overflow:hidden;box-shadow:3px 3px 0 #111;margin:14px 0 12px;background:#F7F3EC;">
       <div style="padding:12px 14px 10px;border-bottom:1px dashed rgba(0,0,0,.2);background:#EDE8DF;background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(0,0,0,.03) 5px,rgba(0,0,0,.03) 6px);">
         <div style="font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#111;font-family:'Courier New',Courier,monospace;margin-bottom:3px;">TRAVEL RECEIPT</div>
         <div style="font-size:13px;font-weight:900;color:#111;">開始記錄你的旅行故事</div>
       </div>
       <div style="padding:12px 14px;">
-        <button type="button" onclick="openSh('trip-ov')"
+        <button type="button" onclick="openNewTrip()"
           style="width:100%;font-size:13px;font-weight:900;padding:10px;cursor:pointer;font-family:inherit;
                  background:var(--yellow);border:2px solid #111;border-radius:6px;box-shadow:2px 2px 0 #111;color:#111;">
           ＋ 新增第一趟旅行
@@ -2530,7 +2675,49 @@ function toggleMapLink(){
       </div>
     </div>
 
-    <div class="shdr"><span class="sttl">最近一趟旅行</span><span class="sact" onclick="navigateTo('trips')">全部 →</span></div>
+    <!-- 下次旅行清單 — 獨立待辦，可摺疊 -->
+    <button type="button" class="etog" id="next-trips-tog" onclick="toggleNextTrips()" style="width:100%;margin-top:14px;">
+      <svg class="cv" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      下次旅行清單
+    </button>
+    <div class="exf" id="next-trips-panel">
+      <button type="button" onclick="openNewIdea()" style="width:100%;margin:10px 0;font-size:13px;font-weight:900;padding:10px;cursor:pointer;font-family:inherit;background:var(--yellow);border:2px solid #111;border-radius:8px;color:#111;">＋ 新增旅行構想</button>
+      <div id="next-trips-container"></div>
+    </div>
+
+    <!-- 旅行構想 sheet -->
+    <div class="ov" id="idea-ov" onclick="closeBg(event,'idea-ov')">
+      <div class="sh">
+        <div class="shndl"></div>
+        <button class="shx" onclick="closeSh('idea-ov')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <div class="shtl" id="idea-sh-title">新增旅行構想</div>
+        <div class="fr"><label class="fl">想去的地方</label><input class="fi" id="idea-place" type="text" placeholder="例：北海道、義大利..."></div>
+        <div style="font-size:12px;font-weight:800;color:var(--ink3);margin-bottom:8px;">時間</div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:10px;cursor:pointer;">
+          <input type="checkbox" id="idea-undated" onchange="toggleIdeaDateMode()" style="width:14px;height:14px;">
+          時間未定
+        </label>
+        <div class="f2c fr" id="idea-date-row">
+          <div><label class="fl">開始（可留空）</label><input class="fi" id="idea-start" type="date"></div>
+          <div><label class="fl">結束（可留空）</label><input class="fi" id="idea-end" type="date"></div>
+        </div>
+        <div style="font-size:12px;font-weight:800;color:var(--ink3);margin-bottom:8px;">規劃狀態</div>
+        <div class="trow" id="idea-status-row" style="margin-bottom:14px;">
+          <button class="tbtn sel" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>做夢中</button>
+          <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>規劃中</button>
+          <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>確定成行</button>
+        </div>
+        <div class="fr"><label class="fl">旅伴</label>
+          <div class="ctw" id="idea-pax-wrap" onclick="document.getElementById('idea-pax-cin').focus()">
+            <input class="cin" id="idea-pax-cin" type="text" placeholder="輸入姓名按 Enter" onkeydown="addTagToWrap(event,'idea-pax-wrap','idea-pax')">
+          </div>
+          <input type="hidden" id="idea-pax">
+        </div>
+        <button class="btn bink" onclick="saveIdea()" style="width:100%;padding:11px;border-radius:var(--rl);margin-top:6px;">儲存構想</button>
+      </div>
+    </div>
+
+    <div class="shdr" style="margin-top:16px;"><span class="sttl">最近一趟旅行</span><span class="sact" onclick="navigateTo('trips')">全部 →</span></div>
     <div id="home-trip-container"></div>
     <div style="height:16px;"></div>
   </div>
@@ -2544,7 +2731,7 @@ function toggleMapLink(){
     <div class="cap" style="margin-top:2px;color:rgba(0,0,0,.4);" id="trips-subtitle">0 趟旅行</div>
   </div>
   <div class="sa">
-    <button type="button" onclick="openSh('trip-ov')"
+    <button type="button" onclick="openNewTrip()"
       style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
              font-size:13px;font-weight:900;padding:11px 16px;cursor:pointer;font-family:inherit;
              background:#ffffff;
@@ -2877,22 +3064,7 @@ function toggleMapLink(){
   <div class="phdr"><div class="disp">設定</div></div>
   <div class="sa">
 
-    <!-- 最簡測試：完全inline，不依賴任何外部函式 -->
-    <div style="background:red;padding:16px;margin-bottom:14px;border-radius:8px;">
-      <div style="color:#fff;font-weight:900;margin-bottom:10px;">🔴 測試A：inline+無accept（已知成功）</div>
-      <input type="file" onchange="alert('A成功！檔名：'+(this.files[0]?this.files[0].name:'無'))" style="background:#fff;padding:8px;border-radius:6px;width:100%;">
-    </div>
-
-    <div style="background:orange;padding:16px;margin-bottom:14px;border-radius:8px;">
-      <div style="color:#fff;font-weight:900;margin-bottom:10px;">🟠 測試B：inline+有accept=".xlsx,.xls"</div>
-      <input type="file" accept=".xlsx,.xls" onchange="alert('B成功！檔名：'+(this.files[0]?this.files[0].name:'無'))" style="background:#fff;padding:8px;border-radius:6px;width:100%;">
-    </div>
-
-    <div style="background:purple;padding:16px;margin-bottom:14px;border-radius:8px;">
-      <div style="color:#fff;font-weight:900;margin-bottom:10px;">🟣 測試C：呼叫外部具名function（無accept）</div>
-      <input type="file" onchange="testNamedFunction(event)" style="background:#fff;padding:8px;border-radius:6px;width:100%;">
-    </div>
-
+    
 
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">個人資料</div>
     <!-- 護照卡 -->
@@ -2972,7 +3144,7 @@ function toggleMapLink(){
       <div class="setr" onclick="importData()"><div class="setl"><div class="setic" style="background:var(--blue);"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><div><div class="setlb">匯入 JSON</div><div class="setsb">還原備份</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       <input type="file" id="json-file-input" accept=".json" onchange="onJsonFileChange(event)" style="display:none;">
       <div class="setr" style="border-bottom:none;flex-direction:column;align-items:flex-start;gap:8px;"><div class="setl"><div class="setic" style="background:#E8FFE8;"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="setlb">匯入 Excel</div><div class="setsb">支援你的行程格式</div></div></div>
-        <input type="file" id="xlsx-file-input" onchange="onXlsxFileChange(event)" style="width:100%;padding:8px;border:1px solid rgba(0,0,0,.15);border-radius:6px;font-size:12px;">
+        <input type="file" id="xlsx-input-v2" onchange="onXlsxFileChange(event)" style="width:100%;padding:8px;border:1px solid rgba(0,0,0,.15);border-radius:6px;font-size:12px;">
       </div>
     </div>
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">危險區域</div>
@@ -3231,6 +3403,20 @@ function toggleMapLink(){
     <div style="display:flex;gap:8px;">
       <button onclick="closeSh('confirm-delete-event-ov')" style="flex:1;padding:12px;border-radius:var(--rl);border:var(--bd);background:var(--white);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">取消</button>
       <button onclick="confirmDeleteEvent()" style="flex:1;padding:12px;border-radius:var(--rl);border:none;background:#e03010;color:white;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">確定刪除</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="confirm-delete-idea-ov" onclick="closeBg(event,'confirm-delete-idea-ov')">
+  <div class="sh" style="padding:24px 20px 32px;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <svg width="32" height="32" viewBox="0 0 24 24" stroke="#e05500" fill="none" stroke-width="1.8" style="margin-bottom:8px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      <div style="font-size:16px;font-weight:900;margin-bottom:6px;">確定刪除此旅行構想？</div>
+      <div style="font-size:12px;color:var(--ink3);">刪除後無法復原</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeSh('confirm-delete-idea-ov')" style="flex:1;padding:12px;border-radius:var(--rl);border:var(--bd);background:var(--white);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">取消</button>
+      <button onclick="confirmDeleteIdea()" style="flex:1;padding:12px;border-radius:var(--rl);border:none;background:#e03010;color:white;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">確定刪除</button>
     </div>
   </div>
 </div>
