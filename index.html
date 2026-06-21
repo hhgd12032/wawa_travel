@@ -2397,6 +2397,67 @@ function dbgLog(msg){
   const debugEl=document.getElementById('xlsx-debug-info');
   if(debugEl)debugEl.textContent='[除錯] '+msg+' ('+new Date().toLocaleTimeString()+')';
 }
+
+async function runEnvDiagnostic(){
+  const out=document.getElementById('env-diagnostic-output');
+  if(!out)return;
+  out.style.display='block';
+  out.textContent='診斷中...';
+  const lines=[];
+  lines.push('=== 環境資訊 ===');
+  lines.push('UserAgent: '+navigator.userAgent);
+  lines.push('是否standalone(PWA): '+(window.navigator.standalone===true?'是':'否'));
+  lines.push('display-mode standalone: '+(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches?'是':'否'));
+  lines.push('螢幕尺寸: '+window.innerWidth+'x'+window.innerHeight);
+  lines.push('');
+  lines.push('=== XLSX函式庫狀態 ===');
+  lines.push('typeof XLSX (當前): '+typeof XLSX);
+  lines.push('');
+  lines.push('=== 測試CDN連線 ===');
+  out.textContent=lines.join('\n')+'\n[正在測試CDN連線...]';
+  try{
+    const testUrl='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    const startTime=Date.now();
+    const resp=await fetch(testUrl,{method:'HEAD',mode:'no-cors'}).catch(e=>({_error:e.message}));
+    const elapsed=Date.now()-startTime;
+    if(resp._error){
+      lines.push('❌ CDN HEAD請求失敗: '+resp._error);
+    }else{
+      lines.push('✅ CDN可連線, 耗時'+elapsed+'ms, status(no-cors模式下無法讀取實際狀態)');
+    }
+  }catch(e){
+    lines.push('❌ CDN連線測試例外: '+e.message);
+  }
+  lines.push('');
+  lines.push('=== 嘗試直接載入XLSX ===');
+  out.textContent=lines.join('\n')+'\n[正在載入XLSX...]';
+  try{
+    const loadStart=Date.now();
+    await loadXlsxLib();
+    const loadElapsed=Date.now()-loadStart;
+    lines.push('loadXlsxLib()耗時: '+loadElapsed+'ms');
+    lines.push('載入後 typeof XLSX: '+typeof XLSX);
+    if(typeof XLSX!=='undefined'){
+      lines.push('✅ XLSX函式庫載入成功！');
+      lines.push('XLSX.version: '+(XLSX.version||'未知'));
+    }else{
+      lines.push('❌ XLSX函式庫載入失敗（逾時或被擋）');
+    }
+  }catch(e){
+    lines.push('❌ loadXlsxLib例外: '+e.message);
+  }
+  lines.push('');
+  lines.push('=== localStorage測試 ===');
+  try{
+    localStorage.setItem('__diag_test__','1');
+    const v=localStorage.getItem('__diag_test__');
+    lines.push(v==='1'?'✅ localStorage正常':'❌ localStorage讀寫異常');
+    localStorage.removeItem('__diag_test__');
+  }catch(e){
+    lines.push('❌ localStorage例外: '+e.message);
+  }
+  out.textContent=lines.join('\n');
+}
 function onXlsxFileChange(input){
   const file=input.files[0];
   dbgLog('change觸發, 檔名='+(file?file.name:'無'));
@@ -2488,17 +2549,31 @@ function parseMyExcel(wb,filename){
   const tripName=(sched[0]&&sched[0][1])||filename.replace(/\.xlsx?$/,'');
   const dateRow=sched[2]||[];
   const dates=[];
+  // 嘗試從檔名或工作表標題抓出年份，因為Excel儲存格常只存"M/D"短格式(無年份)
+  const fnYearMatch=String(filename||'').match(/(20\d{2})/);
+  const titleYearMatch=String((sched[0]&&sched[0][1])||'').match(/(20\d{2})/);
+  const fallbackYear=fnYearMatch?fnYearMatch[1]:(titleYearMatch?titleYearMatch[1]:String(new Date().getFullYear()));
+  let lastMonth=0; // 用於偵測跨年（例如12月→1月）
   for(let c=2;c<dateRow.length;c++){
     const v=dateRow[c];if(!v)continue;
     let ds='';
     if(v instanceof Date||Object.prototype.toString.call(v)==='[object Date]'){
       ds=v.getFullYear()+'-'+String(v.getMonth()+1).padStart(2,'0')+'-'+String(v.getDate()).padStart(2,'0');
     } else {
-      const sv=String(v);
-      const dm=sv.match(/(\d{4})-(\d{2})-(\d{2})/);
-      if(dm)ds=dm[0];
-      else if(sv.match(/^\d{1,2}\/\d{1,2}\/\d{4}/)){
-        const p=sv.split('/');ds=p[2]+'-'+p[0].padStart(2,'0')+'-'+p[1].padStart(2,'0');
+      const sv=String(v).trim();
+      // 完整格式 yyyy-mm-dd 或 yyyy/mm/dd
+      const dmFull=sv.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+      // 帶年份的 M/D/YYYY
+      const dmMDY=sv.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      // 短格式 M/D 或 MM/DD（無年份）－ Excel常見的儲存格自訂格式輸出
+      const dmShort=sv.match(/^(\d{1,2})\/(\d{1,2})$/);
+      if(dmFull){
+        ds=dmFull[1]+'-'+dmFull[2].padStart(2,'0')+'-'+dmFull[3].padStart(2,'0');
+      } else if(dmMDY){
+        ds=dmMDY[3]+'-'+dmMDY[1].padStart(2,'0')+'-'+dmMDY[2].padStart(2,'0');
+      } else if(dmShort){
+        const mm=parseInt(dmShort[1],10);
+        ds=fallbackYear+'-'+dmShort[1].padStart(2,'0')+'-'+dmShort[2].padStart(2,'0');
       } else {
         const d2=new Date(sv);
         if(!isNaN(d2.getTime()))ds=d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0')+'-'+String(d2.getDate()).padStart(2,'0');
@@ -2537,34 +2612,28 @@ function parseMyExcel(wb,filename){
   if(expSheet){
     const exp=XLSX.utils.sheet_to_json(expSheet,{header:1,defval:null,raw:false,dateNF:'yyyy-mm-dd'});
     let lastDate='';
-    const expYear='2025';
+    const expYear=fallbackYear;
     for(let r=1;r<exp.length;r++){
       const row=exp[r];if(!row)continue;
       // row[0]=日期("10/25"), row[1]=類別, row[2]=項目, row[3]=金額
       const dv=row[0];const cat=row[1];const item=row[2];
       const amount=row[3];
-      // 日期："10/25" → "2025-10-25"
-      if(dv&&String(dv).trim()){
-        const dm=String(dv).match(/(\d{1,2})[\/](\d{1,2})/);
-        if(dm)lastDate=expYear+'-'+dm[1].padStart(2,'0')+'-'+dm[2].padStart(2,'0');
-      }
-      // 日期解析：處理 JS Date 物件和多種格式
+      // 費用日期解析：優先處理「M/D」短格式（無年份，補上fallbackYear）
       if(dv){
         let ds='';
         if(dv instanceof Date||Object.prototype.toString.call(dv)==='[object Date]'){
           ds=dv.getFullYear()+'-'+String(dv.getMonth()+1).padStart(2,'0')+'-'+String(dv.getDate()).padStart(2,'0');
         } else {
-          ds=String(dv);
-          // Try direct match first
-          const dm=ds.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-          if(dm)ds=dm[1]+'-'+dm[2].padStart(2,'0')+'-'+dm[3].padStart(2,'0');
-          else if(ds.length===5&&!isNaN(Number(ds))){
-            // Excel serial number: convert
-            const d2=new Date(Date.UTC(1899,11,30)+Number(ds)*86400000);
+          const sv=String(dv).trim();
+          const dmFull=sv.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+          const dmShort=sv.match(/^(\d{1,2})\/(\d{1,2})$/);
+          if(dmFull){
+            ds=dmFull[1]+'-'+dmFull[2].padStart(2,'0')+'-'+dmFull[3].padStart(2,'0');
+          } else if(dmShort){
+            ds=expYear+'-'+dmShort[1].padStart(2,'0')+'-'+dmShort[2].padStart(2,'0');
+          } else if(sv.length===5&&!isNaN(Number(sv))){
+            const d2=new Date(Date.UTC(1899,11,30)+Number(sv)*86400000);
             ds=d2.getUTCFullYear()+'-'+String(d2.getUTCMonth()+1).padStart(2,'0')+'-'+String(d2.getUTCDate()).padStart(2,'0');
-          } else {
-            const d2=new Date(ds);
-            if(!isNaN(d2.getTime()))ds=d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0')+'-'+String(d2.getDate()).padStart(2,'0');
           }
         }
         if(/^\d{4}-\d{2}-\d{2}$/.test(ds))lastDate=ds;
@@ -3156,7 +3225,9 @@ function toggleMapLink(){
       <div class="setr" onclick="document.getElementById('xlsx-input-v2').click()" style="border-bottom:none;"><div class="setl"><div class="setic" style="background:#E8FFE8;"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="setlb">匯入 Excel</div><div class="setsb">支援你的行程格式</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       <input type="file" id="xlsx-input-v2" accept=".xlsx,.xls" onchange="onXlsxFileChange(this)" style="display:none">
     </div>
-    <div id="xlsx-debug-info" style="margin:-6px 0 11px 4px;font-size:11px;color:#e05500;font-weight:700;min-height:16px;"></div>
+    <div id="xlsx-debug-info" style="margin:-6px 0 8px 4px;font-size:11px;color:#e05500;font-weight:700;min-height:16px;white-space:pre-wrap;"></div>
+    <button type="button" onclick="runEnvDiagnostic()" style="width:100%;margin-bottom:11px;padding:10px;background:#FFE0CC;border:1.5px solid #e05500;border-radius:8px;font-size:12px;font-weight:800;color:#e05500;cursor:pointer;">🔍 執行完整環境診斷</button>
+    <div id="env-diagnostic-output" style="margin-bottom:11px;font-size:10px;color:#333;white-space:pre-wrap;background:#f5f5f5;border-radius:6px;padding:10px;display:none;font-family:monospace;line-height:1.6;"></div>
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">危險區域</div>
     <div class="card" style="margin-bottom:20px;padding:4px 11px;">
       <div class="setr" style="border-bottom:none;" onclick="doClearAllData()"><div class="setl"><div class="setic" style="background:#FFE0CC;"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div><div><div class="setlb" style="color:var(--orange);">清除所有資料</div><div class="setsb">清空 LocalStorage</div></div></div></div>
