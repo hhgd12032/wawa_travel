@@ -3381,9 +3381,9 @@ function toggleMapLink(){
       <input type="checkbox" id="idea-undated" onchange="toggleIdeaDateMode()" style="width:14px;height:14px;">
       時間未定
     </label>
-    <div class="f2c fr" id="idea-date-row">
-      <div><label class="fl">開始（可留空）</label><input class="fi" id="idea-start" type="date"></div>
-      <div><label class="fl">結束（可留空）</label><input class="fi" id="idea-end" type="date"></div>
+    <div class="fr" id="idea-date-row" style="display:flex;gap:8px;">
+      <div style="flex:1;min-width:0;width:50%;"><label class="fl">開始（可留空）</label><input class="fi" id="idea-start" type="date" style="width:100%;display:block;"></div>
+      <div style="flex:1;min-width:0;width:50%;"><label class="fl">結束（可留空）</label><input class="fi" id="idea-end" type="date" style="width:100%;display:block;"></div>
     </div>
     <div class="trow" id="idea-status-row">
       <button class="tbtn sel" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>做夢中</button>
@@ -3562,7 +3562,10 @@ function toggleMapLink(){
     <button class="shx" onclick="closeSh('trip-ov')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     <div class="shtl">新增旅行</div>
     <div class="fr"><label class="fl">旅行名稱</label><input class="fi" id="t-name" type="text" placeholder="例：2026 沖繩蜜月"></div>
-    <div class="f2c fr"><div><label class="fl">出發日期</label><input class="fi" id="t-start" type="date"></div><div><label class="fl">回程日期</label><input class="fi" id="t-end" type="date"></div></div>
+    <div class="fr" style="display:flex;gap:8px;">
+      <div style="flex:1;min-width:0;width:50%;"><label class="fl">出發日期</label><input class="fi" id="t-start" type="date" style="width:100%;display:block;"></div>
+      <div style="flex:1;min-width:0;width:50%;"><label class="fl">回程日期</label><input class="fi" id="t-end" type="date" style="width:100%;display:block;"></div>
+    </div>
     <div class="f2c fr"><div><label class="fl">國家</label><input class="fi" id="t-country" type="text" placeholder="日本"></div><div><label class="fl">城市</label><input class="fi" id="t-city" type="text" placeholder="東京、大阪"></div></div>
     <div class="fr"><label class="fl">旅伴成員</label><div class="ctw" id="ctw" onclick="document.getElementById('cin').focus()"><input class="cin" id="cin" type="text" placeholder="輸入姓名按 Enter" onkeydown="addComp(event)"></div></div>
     <div class="fr"><label class="fl">標籤（輸入後按 Enter）</label>
