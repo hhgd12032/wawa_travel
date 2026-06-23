@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>旅行記憶庫</title>
 
 
@@ -41,7 +41,7 @@ svg{display:block;}
 /* TYPE */
 .disp{font-size:24px;font-weight:900;letter-spacing:-.5px;line-height:1.2;}
 .ttl{font-size:16px;font-weight:900;}
-.cap{font-size:11px;color:var(--ink3);font-weight:600;}
+.cap{font-size:13px;color:var(--ink3);font-weight:600;}
 .lup{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);}
 
 /* CARDS */
@@ -216,15 +216,15 @@ svg{display:block;}
 .r2{background:var(--celeste);}
 .r3{background:var(--ivory);}
 .rn{background:var(--bg);}
-.rsco{font-size:13px;font-weight:900;color:var(--orange);}
+.rsco{font-size:15px;font-weight:900;color:var(--orange);}
 
 /* COMPANION */
 .csc{background:var(--white);border:var(--bd);border-radius:var(--rl);padding:11px 13px;display:flex;align-items:center;gap:10px;margin-bottom:9px;box-shadow:2px 2px 0 var(--ink);}
 .csav{width:40px;height:40px;border-radius:50%;border:var(--bd);background:var(--yellow);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .csav svg{width:17px;height:17px;stroke:var(--ink);fill:none;stroke-width:2;}
 .csst{display:flex;gap:8px;margin-top:3px;}
-.csn{font-size:13px;font-weight:900;}
-.csl{font-size:10px;color:var(--ink3);font-weight:700;}
+.csn{font-size:15px;font-weight:900;}
+.csl{font-size:12px;color:var(--ink3);font-weight:700;}
 
 /* HERO FULL-WIDTH (stories/map) */
 .hero-full{
@@ -272,9 +272,9 @@ svg{display:block;}
 .tgl.on::after{transform:translateX(18px);}
 
 /* SHEET */
-.ov{position:fixed;inset:0;background:rgba(1,61,90,.42);z-index:200;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s;}
+.ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(1,61,90,.42);z-index:200;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s;}
 .ov.open{opacity:1;pointer-events:all;}
-.sh{width:100%;max-width:430px;margin:0 auto;background:var(--white);border-radius:var(--rxl) var(--rxl) 0 0;border-top:var(--bd);border-left:var(--bd);border-right:var(--bd);padding:15px 17px 34px;transform:translateY(100%);transition:transform .28s cubic-bezier(.34,1.2,.64,1);max-height:92vh;overflow-y:auto;position:relative;}
+.sh{width:100%;max-width:430px;margin:0 auto;background:var(--white);border-radius:var(--rxl) var(--rxl) 0 0;border-top:var(--bd);border-left:var(--bd);border-right:var(--bd);padding:15px 17px calc(34px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform .28s cubic-bezier(.34,1.2,.64,1);max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;}
 .ov.open .sh{transform:translateY(0);}
 .shndl{width:32px;height:4px;background:var(--ink);border-radius:99px;margin:0 auto 12px;}
 .shtl{font-size:15px;font-weight:900;margin-bottom:12px;}
@@ -285,7 +285,13 @@ svg{display:block;}
 .fr{margin-bottom:9px;}
 .fl{display:block;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px;}
 .fi{width:100%;min-width:0;box-sizing:border-box;padding:9px 11px;border:var(--bd);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--ink);background:var(--white);outline:none;}
-.fi[type="date"]{font-size:13px;padding:9px 11px;min-height:42px;box-sizing:border-box;border:var(--bd);background:var(--white);border-radius:var(--r);color:var(--ink);}
+.fi[type="date"]{font-size:13px;padding:9px 11px;min-height:42px;box-sizing:border-box;border:var(--bd);background:var(--white);border-radius:var(--r);color:var(--ink);-webkit-text-fill-color:var(--ink);}
+.fi[type="date"]::-webkit-datetime-edit{color:var(--ink);-webkit-text-fill-color:var(--ink);}
+.fi[type="date"]::-webkit-datetime-edit-fields-wrapper{color:var(--ink);}
+.fi[type="date"]::-webkit-datetime-edit-text,
+.fi[type="date"]::-webkit-datetime-edit-month-field,
+.fi[type="date"]::-webkit-datetime-edit-day-field,
+.fi[type="date"]::-webkit-datetime-edit-year-field{color:var(--ink);-webkit-text-fill-color:var(--ink);}
 .fi[type="time"]{appearance:none;-webkit-appearance:none;font-size:12px;padding:9px 6px;}
 .fi:focus{background:#FCF3E3;}
 .f2c{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:0;}
@@ -2214,7 +2220,7 @@ function renderRanking(containerId,items,title){
     <div class="rkr">
       <div class="rnum ${rankClass[i]||'rn'}">${i+1}</div>
       <div style="flex:1;">
-        <div style="font-size:12px;font-weight:800;">${item.name}</div>
+        <div style="font-size:14px;font-weight:800;">${item.name}</div>
         <div class="cap">${countryFlag(item.country)} ${fmtDate(item.date)}</div>
       </div>
       <div class="rsco">${item.rating}</div>
@@ -2249,8 +2255,8 @@ function renderMapPage(){
     cityRank.innerHTML=sorted.map(([city,cnt],i)=>`
       <div class="rkr">
         <div class="rnum ${rankClass[i]||'rn'}">${i+1}</div>
-        <div style="flex:1;"><div style="font-size:12px;font-weight:800;">${city}</div></div>
-        <div style="font-size:12px;font-weight:800;">${cnt}次</div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:800;">${city}</div></div>
+        <div style="font-size:14px;font-weight:800;">${cnt}次</div>
       </div>`).join('');
   }
 }
@@ -2273,12 +2279,27 @@ function openEditTrip(){
       ctw.insertBefore(tag,cin);
     });
   }
-  // 航班資訊：編輯時保持空白，不帶入舊資料（讓使用者重新輸入）
-  ['fl-out-dep','fl-out-arr','fl-out-tdep','fl-out-tarr','fl-out-airline','fl-out-fno',
-   'fl-back-dep','fl-back-arr','fl-back-tdep','fl-back-tarr','fl-back-airline','fl-back-fno'
-  ].forEach(id=>v(id,''));
-  const outCabinEl=document.getElementById('fl-out-cabin');if(outCabinEl)outCabinEl.value='經濟艙';
-  const backCabinEl=document.getElementById('fl-back-cabin');if(backCabinEl)backCabinEl.value='經濟艙';
+  // 航班資訊：編輯時正確帶入已儲存的資料（沒有就清空）
+  if(trip.flightOut){
+    v('fl-out-dep',trip.flightOut.dep||'');v('fl-out-arr',trip.flightOut.arr||'');
+    v('fl-out-tdep',trip.flightOut.tDep||'');v('fl-out-tarr',trip.flightOut.tArr||'');
+    v('fl-out-airline',trip.flightOut.airline||'');v('fl-out-fno',trip.flightOut.fno||'');
+    const outCabinEl=document.getElementById('fl-out-cabin');if(outCabinEl)outCabinEl.value=trip.flightOut.cabin||'經濟艙';
+    // 有去程資料時自動展開航班面板
+    if(!flO){toggleFlight(document.getElementById('fltog'));}
+  } else {
+    ['fl-out-dep','fl-out-arr','fl-out-tdep','fl-out-tarr','fl-out-airline','fl-out-fno'].forEach(id=>v(id,''));
+    const outCabinEl=document.getElementById('fl-out-cabin');if(outCabinEl)outCabinEl.value='經濟艙';
+  }
+  if(trip.flightBack){
+    v('fl-back-dep',trip.flightBack.dep||'');v('fl-back-arr',trip.flightBack.arr||'');
+    v('fl-back-tdep',trip.flightBack.tDep||'');v('fl-back-tarr',trip.flightBack.tArr||'');
+    v('fl-back-airline',trip.flightBack.airline||'');v('fl-back-fno',trip.flightBack.fno||'');
+    const backCabinEl=document.getElementById('fl-back-cabin');if(backCabinEl)backCabinEl.value=trip.flightBack.cabin||'經濟艙';
+  } else {
+    ['fl-back-dep','fl-back-arr','fl-back-tdep','fl-back-tarr','fl-back-airline','fl-back-fno'].forEach(id=>v(id,''));
+    const backCabinEl=document.getElementById('fl-back-cabin');if(backCabinEl)backCabinEl.value='經濟艙';
+  }
   const title=document.querySelector('#trip-ov .shtl');
   if(title)title.textContent='編輯旅行';
   const saveBtn=document.getElementById('trip-save-btn');
@@ -3082,34 +3103,35 @@ function toggleMapLink(){
     </div>
     <div class="card" style="padding:6px 11px;" id="exp-list-container"></div>
   </div>
-  <!-- STORY TAB -->
+  <!-- STORY TAB — 統一新風格 -->
   <div id="tab-story" style="display:none;padding:12px 16px;">
-    <!-- 說明卡 — 票根風格 -->
-    <div style="background:#FCF3E3;background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(1,61,90,.04) 5px,rgba(1,61,90,.04) 6px);border:2px solid #013D5A;border-radius:8px;box-shadow:3px 3px 0 #013D5A;padding:12px 14px;margin-bottom:10px;">
-      <div style="font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(1,61,90,.4);font-family:'Courier New',Courier,monospace;margin-bottom:4px;">TRIP STORY</div>
-      <div style="font-size:12px;font-weight:900;margin-bottom:2px;">自動生成旅行故事</div>
-      <div style="font-size:11px;color:var(--ink3);">從主題、記憶和高評分事件自動整理</div>
+    <!-- 說明卡 — 白底+線條icon，跟其他卡片一致 -->
+    <div style="background:#fff;border:2px solid #013D5A;border-radius:10px;box-shadow:3px 3px 0 #013D5A;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="1.8" style="flex-shrink:0;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <div>
+        <div style="font-size:14px;font-weight:900;color:#013D5A;margin-bottom:1px;">整理旅行故事</div>
+        <div style="font-size:12px;color:rgba(1,61,90,.5);">彙整主題、記憶和高評分事件</div>
+      </div>
     </div>
-    <!-- 生成按鈕 — 黃色主要操作按鈕 -->
+    <!-- 生成按鈕 — 統一深藍實心風格 -->
     <button type="button" onclick="generateStory()"
-      style="width:100%;font-size:13px;font-weight:900;padding:10px 16px;cursor:pointer;font-family:inherit;
-             background:var(--yellow);
-             border:2px solid #013D5A;border-radius:6px;box-shadow:3px 3px 0 #013D5A;color:#013D5A;margin-bottom:8px;">
-      生成旅行故事
+      style="width:100%;font-size:13px;font-weight:900;padding:11px 16px;cursor:pointer;font-family:inherit;
+             background:#013D5A;
+             border:2px solid #013D5A;border-radius:8px;box-shadow:3px 3px 0 rgba(1,61,90,.3);color:#FCF3E3;margin-bottom:10px;">
+      ＋ 整理旅行故事
     </button>
-    <!-- 故事文字 — 薄荷綠底，與生成按鈕（米色）區隔 -->
-    <div id="ai-story-text" style="display:none;margin-bottom:8px;
-      background:#E8F0EC;
-      background-image:repeating-linear-gradient(-45deg,transparent,transparent 6px,rgba(1,61,90,.025) 6px,rgba(1,61,90,.025) 7px);
-      border:2px solid #013D5A;border-radius:6px;padding:14px;
-      font-size:12px;line-height:1.8;white-space:pre-wrap;
+    <!-- 故事文字 — 白底，跟其他內容卡一致 -->
+    <div id="ai-story-text" style="display:none;margin-bottom:10px;
+      background:#fff;
+      border:2px solid #013D5A;border-radius:10px;padding:14px;
+      font-size:13px;line-height:1.8;white-space:pre-wrap;
       box-shadow:3px 3px 0 #013D5A;
-      font-family:'Courier New',Courier,monospace;color:#1a3a32;">
+      color:#013D5A;">
     </div>
-    <!-- 複製按鈕 — 薄荷綠同色系 -->
+    <!-- 複製按鈕 — 次要操作，淡色底 -->
     <button type="button" onclick="copyStory()"
       style="width:100%;font-size:13px;font-weight:900;padding:10px 16px;cursor:pointer;font-family:inherit;
-             background:var(--mint);border:2px solid #013D5A;border-radius:6px;box-shadow:2px 2px 0 #013D5A;color:#013D5A;
+             background:#fff;border:1.5px solid rgba(1,61,90,.3);border-radius:8px;color:#013D5A;
              display:none;" id="copy-story-btn">
       複製故事
     </button>
@@ -3206,8 +3228,8 @@ function toggleMapLink(){
     <!-- 故事頁說明卡 — 票根風格 -->
     <div style="background:#FCF3E3;background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(1,61,90,.04) 5px,rgba(1,61,90,.04) 6px);border:2px solid #013D5A;border-radius:8px;box-shadow:3px 3px 0 #013D5A;padding:14px;margin-bottom:12px;">
       <div style="font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(1,61,90,.4);font-family:'Courier New',Courier,monospace;margin-bottom:6px;">TRAVEL STORIES</div>
-      <div style="font-size:13px;font-weight:900;margin-bottom:4px;">旅行故事排行榜</div>
-      <div style="font-size:11px;color:var(--ink3);">新增事件並評分後，自動整理景點與餐廳排行榜</div>
+      <div style="font-size:14px;font-weight:900;margin-bottom:4px;">旅行排行榜</div>
+      <div style="font-size:13px;color:var(--ink3);">新增事件並評分後，自動整理景點與餐廳排行榜</div>
     </div>
     <div class="rkc">
       <div class="rkh"><div><div style="font-size:8px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(1,61,90,.4);font-family:'Courier New',Courier,monospace;">TOP SPOTS</div><div style="font-size:12px;font-weight:900;">人生最佳景點</div></div></div>
