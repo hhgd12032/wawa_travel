@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>旅行記憶庫</title>
 
 
@@ -1635,6 +1635,7 @@ function updateExpense(eid){
   closeSh('exp-ov');
   showToast('✓ 費用已更新');
   renderExpenses();
+  renderTripDetail();
 }
 function setSortMode(mode,btn){
   expSortMode=mode;
@@ -1642,14 +1643,23 @@ function setSortMode(mode,btn){
   if(btn)btn.classList.add('on');
   renderExpenses();
 }
+let deletingExpenseId=null;
 function deleteExpense(eid){
+  deletingExpenseId=eid;
+  openSh('confirm-delete-expense-ov');
+}
+function confirmDeleteExpense(){
+  if(!deletingExpenseId)return;
   const trips=getTrips();
   const trip=trips.find(t=>t.id===currentTripId);
-  if(!trip)return;
-  trip.expenses=(trip.expenses||[]).filter(e=>e.id!==eid);
+  if(!trip){deletingExpenseId=null;return;}
+  trip.expenses=(trip.expenses||[]).filter(e=>e.id!==deletingExpenseId);
   saveTrips(trips);
+  deletingExpenseId=null;
+  closeSh('confirm-delete-expense-ov');
   renderExpenses();
-  showToast('費用已刪除');
+  renderTripDetail();
+  showToast('✓ 費用已刪除');
 }
 
 // ── RENDER: Day Detail (Timeline) ──
@@ -1804,6 +1814,7 @@ function updateDay(){
   if(saveBtn){saveBtn.textContent='儲存每日紀錄';saveBtn.onclick=saveDay;}
   showToast('✓ 每日紀錄已更新');
   renderDayDetail();
+  renderDayList();
 }
 function deleteDay(){
   openSh('confirm-delete-day-ov');
@@ -2058,6 +2069,7 @@ function saveExpense(){
   closeSh('exp-ov');
   showToast('費用已記錄');
   renderExpenses();
+  renderTripDetail();
 }
 
 function resetExpForm(){
@@ -3620,6 +3632,20 @@ function toggleMapLink(){
     <div style="display:flex;gap:8px;">
       <button onclick="closeSh('confirm-delete-day-ov')" style="flex:1;padding:12px;border-radius:var(--rl);border:var(--bd);background:var(--white);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">取消</button>
       <button onclick="confirmDeleteDay()" style="flex:1;padding:12px;border-radius:var(--rl);border:none;background:#e03010;color:white;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">確定刪除</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="confirm-delete-expense-ov" onclick="closeBg(event,'confirm-delete-expense-ov')">
+  <div class="sh" style="padding:24px 20px 32px;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:32px;margin-bottom:8px;">💸</div>
+      <div style="font-size:16px;font-weight:900;margin-bottom:6px;">確定刪除這筆費用？</div>
+      <div style="font-size:12px;color:var(--ink3);">刪除後無法復原</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeSh('confirm-delete-expense-ov')" style="flex:1;padding:12px;border-radius:var(--rl);border:var(--bd);background:var(--white);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">取消</button>
+      <button onclick="confirmDeleteExpense()" style="flex:1;padding:12px;border-radius:var(--rl);border:none;background:#e03010;color:white;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">確定刪除</button>
     </div>
   </div>
 </div>
