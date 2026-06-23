@@ -21,7 +21,7 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;margin:0;padding:0;overflow:hidden;}body{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--ink);}
 svg{display:block;}
-#app{max-width:430px;margin:0 auto;display:grid;grid-template-rows:1fr auto;height:100vh;height:100dvh;}
+#app{max-width:430px;margin:0 auto;display:grid;grid-template-rows:1fr auto;min-height:100vh;min-height:100dvh;}
 #page-container{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
 .page{display:none;padding-bottom:32px;}
 .page.active{display:block;}
@@ -29,7 +29,7 @@ svg{display:block;}
 .sa{padding:0 16px;}
 
 /* NAV */
-.bnav{width:100%;height:auto;min-height:var(--nav);flex-shrink:0;background:var(--white);border-top:1px solid rgba(1,61,90,.12);display:flex;align-items:center;justify-content:space-around;padding:10px 4px calc(20px + env(safe-area-inset-bottom,0px));position:relative;z-index:10;overflow:visible;}
+.bnav{width:100%;height:auto;min-height:var(--nav);flex-shrink:0;background:var(--white);border-top:1px solid rgba(1,61,90,.12);display:flex;align-items:center;justify-content:space-around;padding:8px 4px calc(10px + env(safe-area-inset-bottom,0px));position:relative;z-index:10;overflow:visible;}
 .ni{display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--r);cursor:pointer;border:none;background:none;color:var(--ink3);min-width:50px;font-family:inherit;transition:all .15s;}
 .ni svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;}
 .ni span{font-size:10px;font-weight:800;letter-spacing:.03em;}
@@ -274,7 +274,7 @@ svg{display:block;}
 /* SHEET */
 .ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(1,61,90,.42);z-index:200;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s;}
 .ov.open{opacity:1;pointer-events:all;}
-.sh{width:100%;max-width:430px;margin:0 auto;background:var(--white);border-radius:var(--rxl) var(--rxl) 0 0;border-top:var(--bd);border-left:var(--bd);border-right:var(--bd);padding:15px 17px calc(34px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform .28s cubic-bezier(.34,1.2,.64,1);max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;}
+.sh{width:100%;max-width:430px;margin:0 auto;background:var(--white);border-radius:var(--rxl) var(--rxl) 0 0;border-top:var(--bd);border-left:var(--bd);border-right:var(--bd);padding:9px 17px calc(24px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform .28s cubic-bezier(.34,1.2,.64,1);max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;}
 .ov.open .sh{transform:translateY(0);}
 .shndl{width:32px;height:4px;background:var(--ink);border-radius:99px;margin:0 auto 12px;}
 .shtl{font-size:15px;font-weight:900;margin-bottom:12px;}
@@ -2897,36 +2897,6 @@ function toggleMapLink(){
       <div id="next-trips-container"></div>
     </div>
 
-    <!-- 旅行構想 sheet -->
-    <div class="ov" id="idea-ov" onclick="closeBg(event,'idea-ov')">
-      <div class="sh">
-        <div class="shndl"></div>
-        <button class="shx" onclick="closeSh('idea-ov')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-        <div class="shtl" id="idea-sh-title">新增旅行構想</div>
-        <div class="fr"><label class="fl">想去的地方</label><input class="fi" id="idea-place" type="text" placeholder="例：北海道、義大利..."></div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:10px;cursor:pointer;">
-          <input type="checkbox" id="idea-undated" onchange="toggleIdeaDateMode()" style="width:14px;height:14px;">
-          時間未定
-        </label>
-        <div class="f2c fr" id="idea-date-row">
-          <div><label class="fl">開始（可留空）</label><input class="fi" id="idea-start" type="date"></div>
-          <div><label class="fl">結束（可留空）</label><input class="fi" id="idea-end" type="date"></div>
-        </div>
-        <div class="trow" id="idea-status-row">
-          <button class="tbtn sel" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>做夢中</button>
-          <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>規劃中</button>
-          <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>確定成行</button>
-        </div>
-        <div class="fr"><label class="fl">旅伴</label>
-          <div class="ctw" id="idea-pax-wrap" onclick="document.getElementById('idea-pax-cin').focus()">
-            <input class="cin" id="idea-pax-cin" type="text" placeholder="輸入姓名按 Enter" onkeydown="addTagToWrap(event,'idea-pax-wrap','idea-pax')">
-          </div>
-          <input type="hidden" id="idea-pax">
-        </div>
-        <button class="btn bink" onclick="saveIdea()" style="width:100%;padding:11px;border-radius:var(--rl);margin-top:6px;">儲存構想</button>
-      </div>
-    </div>
-
     <div class="shdr" style="margin-top:16px;"><span class="sttl">最近一趟旅行</span><span class="sact" onclick="navigateTo('trips')">全部 →</span></div>
     <div id="home-trip-container"></div>
     <div style="height:16px;"></div>
@@ -3400,6 +3370,36 @@ function toggleMapLink(){
 
 </div><!-- end #app -->
 <!-- ══ SHEETS ══ -->
+<!-- 旅行構想 sheet -->
+<div class="ov" id="idea-ov" onclick="closeBg(event,'idea-ov')">
+  <div class="sh">
+    <div class="shndl"></div>
+    <button class="shx" onclick="closeSh('idea-ov')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="shtl" id="idea-sh-title">新增旅行構想</div>
+    <div class="fr"><label class="fl">想去的地方</label><input class="fi" id="idea-place" type="text" placeholder="例：北海道、義大利..."></div>
+    <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:10px;cursor:pointer;">
+      <input type="checkbox" id="idea-undated" onchange="toggleIdeaDateMode()" style="width:14px;height:14px;">
+      時間未定
+    </label>
+    <div class="f2c fr" id="idea-date-row">
+      <div><label class="fl">開始（可留空）</label><input class="fi" id="idea-start" type="date"></div>
+      <div><label class="fl">結束（可留空）</label><input class="fi" id="idea-end" type="date"></div>
+    </div>
+    <div class="trow" id="idea-status-row">
+      <button class="tbtn sel" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>做夢中</button>
+      <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>規劃中</button>
+      <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>確定成行</button>
+    </div>
+    <div class="fr"><label class="fl">旅伴</label>
+      <div class="ctw" id="idea-pax-wrap" onclick="document.getElementById('idea-pax-cin').focus()">
+        <input class="cin" id="idea-pax-cin" type="text" placeholder="輸入姓名按 Enter" onkeydown="addTagToWrap(event,'idea-pax-wrap','idea-pax')">
+      </div>
+      <input type="hidden" id="idea-pax">
+    </div>
+    <button class="btn bink" onclick="saveIdea()" style="width:100%;padding:11px;border-radius:var(--rl);margin-top:6px;">儲存構想</button>
+  </div>
+</div>
+
 <!-- Quick Add Event -->
 <div class="ov" id="qa-ov" onclick="closeBg(event,'qa-ov')">
   <div class="sh">
