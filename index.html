@@ -19,7 +19,8 @@
   --r:12px;--rl:16px;--rxl:20px;--nav:64px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{min-height:100%;width:100%;margin:0;padding:0;overflow-x:hidden;-webkit-text-size-adjust:100%;}body{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--ink);}
+html{min-height:100%;width:100%;margin:0;padding:0;overflow-x:hidden;-webkit-text-size-adjust:100%;}
+body{min-height:100%;width:100%;margin:0;padding:0;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--ink);}
 svg{display:block;}
 #app{width:100%;max-width:430px;margin:0 auto;min-height:100dvh;position:relative;background:var(--bg);overflow-x:hidden;}
 #page-container{width:100%;}
@@ -146,6 +147,82 @@ svg{display:block;}
 .dtab{padding:10px 12px;font-size:12px;font-weight:800;cursor:pointer;background:none;border:none;border-bottom:3px solid transparent;color:var(--ink3);font-family:inherit;display:flex;align-items:center;gap:4px;}
 .dtab svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;}
 .dtab.on{color:var(--ink);border-bottom-color:var(--ink);}
+
+/* STORIES PAGE — 藥丸狀 Tab（獨立於 .dtabs，不影響旅行詳細頁） */
+.pilltabs{display:flex;gap:6px;padding:14px 16px 0;}
+.pilltab{display:flex;align-items:center;gap:5px;padding:9px 14px;border-radius:99px;font-size:12px;font-weight:800;cursor:pointer;border:1.5px solid rgba(1,61,90,.15);background:rgba(255,255,255,.5);color:var(--ink3);font-family:inherit;}
+.pilltab svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;}
+.pilltab.on{background:var(--ink);border-color:var(--ink);color:var(--cream);}
+.pilltabs-spacer{height:18px;}
+
+/* OUTING — 清單日期卡（hero，常駐顯示） */
+.ohero{position:relative;padding:16px 16px 14px;overflow:hidden;background:var(--ink);border-radius:0 0 var(--rxl) var(--rxl);margin-bottom:14px;}
+.ohero-bgnum{position:absolute;right:-8px;top:-22px;font-size:110px;font-weight:900;color:rgba(255,255,255,.06);line-height:1;font-family:'Courier New',monospace;pointer-events:none;}
+.ohero-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;position:relative;z-index:1;}
+.ohero-top .m{font-size:16px;font-weight:900;color:var(--cream);}
+.ohero-nav{width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(252,243,227,.4);background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.ohero-nav svg{width:11px;height:11px;stroke:var(--cream);fill:none;stroke-width:2.5;}
+.ohero-chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;position:relative;z-index:1;}
+.ohero-chips::-webkit-scrollbar{display:none;}
+.ohero-chip{flex-shrink:0;background:rgba(255,255,255,.1);border:1.5px solid rgba(252,243,227,.25);border-radius:var(--r);padding:8px 10px;min-width:50px;text-align:center;cursor:pointer;}
+.ohero-chip .dn{font-size:16px;font-weight:900;color:var(--cream);font-family:'Courier New',monospace;}
+.ohero-chip .wd{font-size:8px;font-weight:700;color:rgba(252,243,227,.6);margin-top:1px;letter-spacing:.06em;}
+.ohero-chip.sel{background:var(--yellow);border-color:var(--yellow);}
+.ohero-chip.sel .dn,.ohero-chip.sel .wd{color:var(--ink);}
+.ohero-empty{color:rgba(252,243,227,.5);font-size:12px;padding:8px 0;position:relative;z-index:1;}
+
+/* OUTING — 展開/收合票根月曆 */
+.ocal-toggle{display:flex;align-items:center;gap:6px;width:100%;text-align:left;font-size:11px;font-weight:800;color:var(--ink3);cursor:pointer;padding:9px 10px;border-radius:var(--r);background:none;border:1.5px dashed var(--ink3);font-family:inherit;margin-bottom:10px;}
+.ocal-toggle svg.cv{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;transition:transform .2s;order:-1;}
+.ocal-toggle.open svg.cv{transform:rotate(180deg);}
+.ocal-panel{display:none;margin-bottom:14px;}
+.ocal-panel.show{display:block;}
+.ocal-wrap{background:var(--white);border:1.5px solid var(--ink);border-radius:var(--rl);box-shadow:3px 3px 0 rgba(1,61,90,.45);overflow:hidden;}
+.ocal-gridwrap{background:var(--white);padding:12px 12px 14px;}
+.ocal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px;}
+.ocal-weekdays span{text-align:center;font-size:9px;font-weight:800;color:rgba(1,61,90,.35);}
+.ocal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.ocal-cell{aspect-ratio:1;max-height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.ocal-cell.empty{cursor:default;}
+.ocal-cell .ocal-num{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;font-weight:700;color:var(--ink);font-family:'Courier New',monospace;}
+.ocal-cell.has-record .ocal-num{background:var(--yellow);font-weight:900;}
+.ocal-cell.today:not(.sel) .ocal-num{box-shadow:inset 0 0 0 1.5px rgba(1,61,90,.35);color:rgba(1,61,90,.7);font-weight:900;}
+.ocal-cell.sel .ocal-num{background:var(--ink);color:var(--cream);}
+
+/* OUTING — 列表卡片：深色日期標籤 */
+.ocard{background:var(--white);border:1.5px solid rgba(1,61,90,.15);border-radius:var(--rl);margin-bottom:10px;display:flex;align-items:stretch;cursor:pointer;overflow:hidden;transition:border-color .15s,transform .1s;}
+.ocard:active{transform:scale(.99);}
+.ocard-date{background:var(--ink);color:var(--cream);min-width:58px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;}
+.ocard-date .mon{font-size:9px;font-weight:800;letter-spacing:.12em;opacity:.6;font-family:'Courier New',monospace;}
+.ocard-date .num{font-size:26px;font-weight:900;line-height:1.1;margin:3px 0;font-family:'Courier New',monospace;letter-spacing:-.02em;}
+.ocard-date .wd{font-size:9px;font-weight:800;letter-spacing:.12em;opacity:.75;font-family:'Courier New',monospace;}
+.ocard-body{flex:1;padding:12px 14px;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:5px;}
+.ocard-body .nm{font-size:15px;font-weight:900;color:var(--ink);letter-spacing:-.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ocard-body .meta{font-size:11px;color:var(--ink3);font-weight:700;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.ocard-body .meta svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+.ocard-body .tags{display:flex;flex-wrap:wrap;gap:4px;}
+
+/* OUTING — Step①②按鈕 */
+.steprow{display:flex;gap:8px;margin:14px 0;}
+.stepbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:900;padding:11px 12px;cursor:pointer;font-family:inherit;border-radius:8px;border:2px solid var(--ink);background:var(--white);color:var(--ink);white-space:nowrap;}
+.stepbtn.primary{background:var(--ink);border-color:var(--ink);color:var(--cream);box-shadow:3px 3px 0 rgba(1,61,90,.3);}
+.stepbtn.disabled{background:var(--white);border-color:rgba(1,61,90,.15);color:rgba(1,61,90,.3);cursor:not-allowed;box-shadow:none;}
+
+/* OUTING — 合併版內容卡 */
+.finalcard{background:var(--celeste);border-radius:var(--rl);padding:14px 16px;margin-bottom:14px;}
+.finalcard .toprow{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;}
+.finalcard .nm{font-size:18px;font-weight:900;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.finalcard .actions{display:flex;gap:5px;flex-shrink:0;}
+.finalcard .memo{font-size:13px;color:rgba(1,61,90,.75);margin-bottom:10px;line-height:1.4;}
+.finalcard .hr{border-top:1.5px dashed rgba(1,61,90,.22);margin-bottom:9px;}
+.finalcard .bottomrow{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.finalcard .comp{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:rgba(1,61,90,.75);min-width:0;flex:1;}
+.finalcard .comp svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+.finalcard .comp span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.finalcard .weather{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:rgba(1,61,90,.75);flex-shrink:0;white-space:nowrap;}
+.finalcard .weather svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+.outing-empty-state{text-align:center;padding:30px 16px;color:rgba(1,61,90,.35);font-size:12px;}
+.outing-empty-state .et{font-weight:800;margin-bottom:4px;color:rgba(1,61,90,.5);}
 
 /* DAY LIST */
 .dlist{padding:12px 16px;display:flex;flex-direction:column;gap:0;}
@@ -284,9 +361,10 @@ svg{display:block;}
 /* FORM */
 .fr{margin-bottom:9px;}
 .fl{display:block;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px;}
-.fi{width:100%;min-width:0;box-sizing:border-box;padding:9px 11px;border:var(--bd);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--ink);background:var(--white);outline:none;}
-.fi[type="date"]{font-size:12px;padding:9px 6px;min-height:42px;box-sizing:border-box;border:var(--bd);background:var(--white);border-radius:var(--r);color:var(--ink);width:100%;min-width:0;max-width:100%;}
-.fi[type="time"]{appearance:none;-webkit-appearance:none;font-size:12px;padding:9px 6px;}
+.fi{width:100%;min-width:0;box-sizing:border-box;padding:9px 11px;min-height:42px;border:var(--bd);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--ink);background:var(--white);outline:none;line-height:1.3;}
+.fi[type="date"]{font-size:13px;padding:9px 11px;min-height:42px;box-sizing:border-box;border:var(--bd);background:var(--white);border-radius:var(--r);color:var(--ink);width:100%;min-width:0;max-width:100%;line-height:1.3;}
+.fi[type="time"]{appearance:none;-webkit-appearance:none;font-size:13px;padding:9px 11px;min-height:42px;}
+select.fi{appearance:none;-webkit-appearance:none;-moz-appearance:none;padding:9px 30px 9px 11px;min-height:42px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23013D5A' stroke-width='2.5'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 9px center;background-size:14px 14px;}
 .fi:focus{background:#FCF3E3;}
 .f2c{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:0;}
 .f2c>div{min-width:0;} .f2c .fi{min-width:0;}
@@ -431,6 +509,9 @@ function openSh(id){
   if(el)el.classList.add('open');
   // 每次開啟事件 sheet 時重建評分點點
   if(id==='qa-ov')buildRating();
+  if(id==='oqa-ov')buildOutingRating();
+  if(id==='exp-ov')populateCurrencySelect();
+  if(id==='add-currency-ov'&&!editingCurrencyCode)resetCurrencyForm();
 }
 function closeSh(id){
   const el=document.getElementById(id);
@@ -441,6 +522,7 @@ function closeSh(id){
     const saveBtn=document.getElementById('trip-save-btn');
     if(saveBtn){saveBtn.textContent='建立旅行';saveBtn.onclick=saveTrip;}
   }
+  if(id==='add-currency-ov')resetCurrencyForm();
 }
 function closeBg(e,id){
   if(e.target===document.getElementById(id))closeSh(id);
@@ -745,6 +827,21 @@ function addComp(e){
   // 用 setTimeout 確保清空在所有輸入法事件後執行
   setTimeout(()=>{inp.value='';inp.focus();},0);
 }
+function addCompToWrap(e,wrapId){
+  if(e.key!=='Enter')return;
+  e.preventDefault();
+  e.stopPropagation();
+  const inp=e.target;
+  const name=inp.value.trim();
+  if(!name)return;
+  const tag=document.createElement('span');
+  tag.className='ctag';
+  tag.setAttribute('data-name',name);
+  tag.innerHTML='<span class="ctag-name">'+name+'</span><button class="ctrm" onclick="this.parentElement.remove()">×</button>';
+  const wrap=document.getElementById(wrapId);
+  if(wrap)wrap.insertBefore(tag,inp);
+  setTimeout(()=>{inp.value='';inp.focus();},0);
+}
 
 function buildRating(){
   const c=document.getElementById('rdots');
@@ -801,7 +898,127 @@ function deleteDayFromList(dayId){
 
 const COLORS = ['ty','tb','tm','tp','to'];
 const COLOR_LABELS = {ty:'黃',tb:'藍',tm:'綠',tp:'紫',to:'橘'};
-const CURRENCY_SYM = {JPY:'¥',TWD:'TWD',USD:'USD',KRW:'₩',EUR:'€'};
+const DEFAULT_CURRENCIES = [
+  {code:'TWD',sym:'TWD'},
+  {code:'JPY',sym:'¥'},
+  {code:'USD',sym:'USD'},
+  {code:'KRW',sym:'₩'},
+  {code:'EUR',sym:'€'}
+];
+function populateCurrencySelect(){
+  const sel=document.getElementById('ex-currency');
+  if(!sel)return;
+  const prevVal=sel.value;
+  const list=getCurrencies();
+  sel.innerHTML=list.map(c=>`<option value="${c.code}">${c.code}</option>`).join('');
+  if(prevVal&&list.some(c=>c.code===prevVal))sel.value=prevVal;
+}
+
+function getCurrencies(){
+  const s=getSettings();
+  if(Array.isArray(s.currencies)&&s.currencies.length)return s.currencies;
+  return DEFAULT_CURRENCIES.slice();
+}
+function saveCurrencies(list){
+  const s=getSettings();
+  s.currencies=list;
+  saveSettings(s);
+}
+function addCurrency(code,sym){
+  code=(code||'').trim().toUpperCase();
+  sym=(sym||'').trim();
+  if(!code)return false;
+  const list=getCurrencies();
+  if(list.some(c=>c.code===code))return false;
+  list.push({code,sym:sym||code});
+  saveCurrencies(list);
+  return true;
+}
+function updateCurrency(oldCode,newCode,sym){
+  oldCode=(oldCode||'').trim().toUpperCase();
+  newCode=(newCode||'').trim().toUpperCase();
+  sym=(sym||'').trim();
+  if(!newCode)return false;
+  const list=getCurrencies();
+  // 如果改了代碼，要確認新代碼不會跟別的（非自己）幣別衝突
+  if(newCode!==oldCode&&list.some(c=>c.code===newCode))return false;
+  const idx=list.findIndex(c=>c.code===oldCode);
+  if(idx<0)return false;
+  list[idx]={code:newCode,sym:sym||newCode};
+  saveCurrencies(list);
+  return true;
+}
+let deletingCurrencyCode=null;
+function deleteCurrency(code){
+  deletingCurrencyCode=code;
+  openSh('confirm-delete-currency-ov');
+}
+function confirmDeleteCurrency(){
+  if(!deletingCurrencyCode)return;
+  const list=getCurrencies().filter(c=>c.code!==deletingCurrencyCode);
+  saveCurrencies(list);
+  deletingCurrencyCode=null;
+  closeSh('confirm-delete-currency-ov');
+  renderCurrencyListSettings();
+  showToast('✓ 幣別已刪除');
+}
+// CURRENCY_SYM 保留原本 CURRENCY_SYM[code] 的用法，但改為動態查詢自訂幣別清單
+const CURRENCY_SYM = new Proxy({},{
+  get(_,code){
+    const found=getCurrencies().find(c=>c.code===code);
+    return found?found.sym:undefined;
+  }
+});
+
+function renderCurrencyListSettings(){
+  const el=document.getElementById('currency-list-settings');
+  if(!el)return;
+  const list=getCurrencies();
+  el.innerHTML=list.map(c=>`
+    <div class="setr"><div class="setl"><div class="setic" style="background:var(--bg);"><span style="font-size:13px;font-weight:900;color:#013D5A;">${c.sym}</span></div><div><div class="setlb">${c.code}</div></div></div><div style="display:flex;gap:4px;"><button onclick="openEditCurrency('${c.code}')" style="border:none;background:none;cursor:pointer;padding:6px;display:flex;"><svg width="15" height="15" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg></button><button onclick="deleteCurrency('${c.code}')" style="border:none;background:none;cursor:pointer;padding:6px;display:flex;"><svg width="15" height="15" viewBox="0 0 24 24" stroke="#e05500" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></div>
+  `).join('');
+}
+let editingCurrencyCode=null;
+function openEditCurrency(code){
+  const cur=getCurrencies().find(c=>c.code===code);
+  if(!cur)return;
+  editingCurrencyCode=code;
+  v('cur-code-input',cur.code);
+  v('cur-sym-input',cur.sym);
+  const title=document.querySelector('#add-currency-ov .shtl');
+  if(title)title.textContent='修改幣別';
+  const saveBtn=document.querySelector('#add-currency-ov .btn.bink.blg');
+  if(saveBtn)saveBtn.textContent='儲存修改';
+  openSh('add-currency-ov');
+}
+function resetCurrencyForm(){
+  editingCurrencyCode=null;
+  v('cur-code-input','');v('cur-sym-input','');
+  const title=document.querySelector('#add-currency-ov .shtl');
+  if(title)title.textContent='新增幣別';
+  const saveBtn=document.querySelector('#add-currency-ov .btn.bink.blg');
+  if(saveBtn)saveBtn.textContent='儲存幣別';
+}
+function saveNewCurrency(){
+  const code=gv('cur-code-input');
+  const sym=gv('cur-sym-input');
+  if(!code){showToast('請輸入幣別代碼');return;}
+  if(editingCurrencyCode){
+    const ok=updateCurrency(editingCurrencyCode,code,sym);
+    if(!ok){showToast('此幣別代碼已存在');return;}
+    closeSh('add-currency-ov');
+    resetCurrencyForm();
+    renderCurrencyListSettings();
+    showToast('✓ 幣別已更新');
+    return;
+  }
+  const ok=addCurrency(code,sym);
+  if(!ok){showToast('此幣別代碼已存在');return;}
+  v('cur-code-input','');v('cur-sym-input','');
+  closeSh('add-currency-ov');
+  renderCurrencyListSettings();
+  showToast('✓ 幣別已新增');
+}
 
 // ── DB helpers ──
 function dbLoad(key){
@@ -825,6 +1042,8 @@ function dbSave(key,val){
 
 function getTrips(){const t=dbLoad('ptk_trips');return Array.isArray(t)?t:[];}
 function saveTrips(t){if(!Array.isArray(t))return;dbSave('ptk_trips',t);}
+function getOutings(){const o=dbLoad('ptk_outings');return Array.isArray(o)?o:[];}
+function saveOutings(o){if(!Array.isArray(o))return;dbSave('ptk_outings',o);}
 function getSettings(){try{return JSON.parse(localStorage.getItem('ptk_settings')||'{}');}catch{return {};}}
 function saveSettings(s){localStorage.setItem('ptk_settings',JSON.stringify(s));}
 
@@ -846,11 +1065,21 @@ function todayStr(){return new Date().toISOString().slice(0,10);}
 // ── Current state ──
 let currentTripId = null;
 let currentDayId  = null;
+let currentOutingId = null;
 let activeFilter  = 'all';
 let editingEventId = null;
 let currentRating = 0;
 
 // ── NAVIGATION ──
+function showStoryMapTab(t){
+  ['rank','map'].forEach(k=>{
+    const el=document.getElementById('sm-tab-'+k);if(el)el.style.display=k===t?'block':'none';
+    const btn=document.getElementById('sm-tb-'+k);if(btn)btn.classList.toggle('on',k===t);
+  });
+  if(t==='map')renderMapPage();
+  if(t==='rank')renderStories();
+}
+
 function navigateTo(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
@@ -858,11 +1087,12 @@ function navigateTo(id){
   const nv=document.getElementById('nav-'+id);if(nv)nv.classList.add('on');
   document.querySelectorAll('.fab').forEach(f=>f.style.display='none');
   if(id==='home'){renderHome();const fb=document.getElementById('fab-home');if(fb)fb.style.display='flex';}
-  if(id==='stories'){renderStories();}
-  if(id==='map'){renderMapPage();}
+  if(id==='stories'){renderStories();renderMapPage();}
   if(id==='trips'){renderTripList();}
+  if(id==='outings'){renderOutingList();}
   if(id==='day-detail'){}
   if(id==='trip-detail'){showTab('days');}
+  if(id==='settings'){renderCurrencyListSettings();}
   const pc=document.getElementById("page-container");if(pc)pc.scrollTop=0;
 }
 
@@ -952,7 +1182,7 @@ function tripCardHTML(trip, onclick=''){
   const exps=trip.expenses||[];
   const currTotals={};
   exps.forEach(e=>{const c=e.currency||'TWD';currTotals[c]=(currTotals[c]||0)+(parseFloat(e.amount)||0);});
-  const totalStr=Object.keys(currTotals).map(c=>(CURRENCY_SYM[c]||c)+' '+currTotals[c].toLocaleString()).join(' · ');
+  const currLines=Object.keys(currTotals).map(c=>(CURRENCY_SYM[c]||c)+' '+currTotals[c].toLocaleString());
 
   // 標籤
   const tagHtml=splitTags(trip.tags).map(t=>`<span style="font-size:13px;font-weight:700;padding:3px 8px;border-radius:99px;background:rgba(1,61,90,.07);color:#444;border:1px solid rgba(1,61,90,.12);">${t}</span>`).join('');
@@ -980,11 +1210,13 @@ function tripCardHTML(trip, onclick=''){
           <div style="font-size:16px;font-weight:900;color:#013D5A;letter-spacing:-.3px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${trip.name||'未命名旅行'}</div>
           <span style="font-size:10px;font-weight:700;color:rgba(1,61,90,.45);flex-shrink:0;">${days}天</span>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <div style="display:flex;flex-wrap:wrap;gap:4px;min-width:0;">${tagHtml||''}</div>
-          ${totalStr?`<div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
-            <svg width="11" height="11" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            <span style="font-size:13px;font-weight:900;color:#013D5A;">${totalStr}</span>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+          <div style="display:flex;flex-wrap:wrap;gap:4px;min-width:0;flex:1;">${tagHtml||''}</div>
+          ${currLines.length?`<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;">
+            ${currLines.map(line=>`<div style="display:flex;align-items:center;gap:3px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <span style="font-size:13px;font-weight:900;color:#013D5A;white-space:nowrap;">${line}</span>
+            </div>`).join('')}
           </div>`:''}
         </div>
       </div>
@@ -996,6 +1228,512 @@ function tripCardHTML(trip, onclick=''){
 function countryFlag(country){
   const map={日本:'🇯🇵',韓國:'🇰🇷',台灣:'🇹🇼',泰國:'🇹🇭',美國:'🇺🇸',法國:'🇫🇷',義大利:'🇮🇹',英國:'🇬🇧',德國:'🇩🇪',香港:'🇭🇰',澳門:'🇲🇴',新加坡:'🇸🇬',越南:'🇻🇳',印尼:'🇮🇩'};
   return map[country]||'🌏';
+}
+
+// ══════════════════════════════════════════
+// 日常踩點 (Outings) — 跟旅行平行的獨立資料集合
+// ══════════════════════════════════════════
+const WD_EN=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const MON_EN=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const ICON_COMP_SVG='<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+const ICON_PIN_SVG='<svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+
+function outingCardHTML(outing,onclick=''){
+  const tagHtml=splitTags(outing.tags).map(t=>`<span style="font-size:12px;font-weight:700;padding:3px 8px;border-radius:99px;background:rgba(1,61,90,.07);color:#444;border:1px solid rgba(1,61,90,.12);">${t}</span>`).join('');
+  const compStr=(outing.companions||[]).join('、');
+  const d=outing.date?new Date(outing.date):null;
+  return `<div class="ocard" onclick="${onclick}">
+    <div class="ocard-date">
+      <div class="mon">${d?MON_EN[d.getMonth()]:'—'}</div>
+      <div class="num">${d?d.getDate():'?'}</div>
+      <div class="wd">${d?WD_EN[d.getDay()]:''}</div>
+    </div>
+    <div class="ocard-body">
+      <div class="nm">${outing.name||'未命名踩點'}</div>
+      ${outing.city||compStr?`<div class="meta">${outing.city?`${ICON_PIN_SVG}${outing.city}`:''}${outing.city&&compStr?'<span style="width:4px;"></span>':''}${compStr?`${ICON_COMP_SVG}${compStr}`:''}</div>`:''}
+      ${tagHtml?`<div class="tags">${tagHtml}</div>`:''}
+    </div>
+  </div>`;
+}
+
+// ── 日常踩點：月曆視角 ──
+let outingCalYear=null, outingCalMonth=null; // month: 0-11
+let outingSelectedDate=null;
+let outingCalOpen=false;
+
+function renderOutingList(){
+  const now=new Date();
+  if(outingCalYear===null){outingCalYear=now.getFullYear();outingCalMonth=now.getMonth();}
+  renderOutingHero();
+  renderOutingCalendar();
+  const outings=getOutings();
+  const sub=document.getElementById('outings-subtitle');
+  if(sub){
+    const cities=[...new Set(outings.map(o=>o.city).filter(Boolean))];
+    const cStr=cities.length>0?`・${cities.length} 個城市`:'';
+    sub.textContent=`${outings.length} 筆紀錄${cStr}`;
+  }
+}
+
+function toggleOutingCal(){
+  outingCalOpen=!outingCalOpen;
+  const panel=document.getElementById('outing-cal-panel');
+  const tog=document.getElementById('outing-cal-toggle');
+  if(panel)panel.classList.toggle('show',outingCalOpen);
+  if(tog){
+    tog.classList.toggle('open',outingCalOpen);
+    const label=tog.querySelector('.ocal-toggle-label');
+    if(label)label.textContent=outingCalOpen?'收合月曆':'展開完整月曆';
+  }
+}
+
+function changeOutingMonth(delta){
+  outingCalMonth+=delta;
+  if(outingCalMonth<0){outingCalMonth=11;outingCalYear--;}
+  if(outingCalMonth>11){outingCalMonth=0;outingCalYear++;}
+  outingSelectedDate=null;
+  renderOutingHero();
+  renderOutingCalendar();
+}
+
+function renderOutingHero(){
+  const label=document.getElementById('outing-hero-label');
+  const bgnum=document.getElementById('outing-hero-bgnum');
+  const chipsEl=document.getElementById('outing-hero-chips');
+  if(!label||!chipsEl)return;
+  label.textContent=`${outingCalYear}年 ${outingCalMonth+1}月`;
+  if(bgnum)bgnum.textContent=outingCalMonth+1;
+
+  const outings=getOutings();
+  const recordDatesInMonth=[...new Set(outings.map(o=>o.date).filter(Boolean))]
+    .filter(ds=>ds.startsWith(`${outingCalYear}-${String(outingCalMonth+1).padStart(2,'0')}`))
+    .sort();
+
+  if(recordDatesInMonth.length===0){
+    chipsEl.innerHTML='<div class="ohero-empty">本月還沒有紀錄</div>';
+    return;
+  }
+  chipsEl.innerHTML=recordDatesInMonth.map(ds=>{
+    const d=new Date(ds);
+    const isSel=ds===outingSelectedDate;
+    return `<div class="ohero-chip${isSel?' sel':''}" onclick="selectOutingDate('${ds}')">
+      <div class="dn">${d.getDate()}</div><div class="wd">${WD_EN[d.getDay()]}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderOutingCalendar(){
+  const grid=document.getElementById('outing-cal-grid');
+  if(!grid)return;
+
+  const outings=getOutings();
+  const datesWithRecord=new Set(outings.map(o=>o.date).filter(Boolean));
+
+  const firstDay=new Date(outingCalYear,outingCalMonth,1);
+  const startWeekday=firstDay.getDay(); // 0=Sun
+  const daysInMonth=new Date(outingCalYear,outingCalMonth+1,0).getDate();
+  const todayStr2=todayStr();
+
+  let cells='';
+  for(let i=0;i<startWeekday;i++)cells+=`<div class="ocal-cell empty"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${outingCalYear}-${String(outingCalMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const hasRecord=datesWithRecord.has(dateStr);
+    const isToday=dateStr===todayStr2;
+    const isSelected=dateStr===outingSelectedDate;
+    cells+=`<div class="ocal-cell${hasRecord?' has-record':''}${isToday?' today':''}${isSelected?' sel':''}" onclick="selectOutingDate('${dateStr}')"><span class="ocal-num">${d}</span></div>`;
+  }
+  grid.innerHTML=cells;
+
+  renderOutingDayList();
+}
+
+function selectOutingDate(dateStr){
+  outingSelectedDate=outingSelectedDate===dateStr?null:dateStr;
+  renderOutingHero();
+  renderOutingCalendar();
+}
+
+function formatCompanionsSummary(names,maxFull=5,maxShow=4){
+  if(!names||names.length===0)return '';
+  if(names.length<=maxFull)return names.join('、');
+  return names.slice(0,maxShow).join('、')+'...';
+}
+
+function handleStep2Click(){
+  if(!outingSelectedDate){
+    showToast('請先選擇日期或新增踩點');
+    return;
+  }
+  const outing=getOutings().find(o=>o.date===outingSelectedDate);
+  if(!outing){
+    showToast('請先完成 Step 1 新增踩點');
+    return;
+  }
+  currentOutingId=outing.id;
+  openNewOutingEvent();
+}
+
+function renderOutingDayList(){
+  const el=document.getElementById('outing-content-area');
+  if(!el)return;
+  const outings=getOutings();
+  const step2btn=document.getElementById('outing-step2-btn');
+
+  if(!outingSelectedDate){
+    currentOutingId=null;
+    if(step2btn)step2btn.classList.add('disabled');
+    if(outings.length===0){
+      el.innerHTML=`<div class="outing-empty-state"><svg viewBox="0 0 24 24" style="width:36px;height:36px;stroke:rgba(1,61,90,.25);fill:none;stroke-width:1.5;margin-bottom:8px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><div class="et">還沒有日常踩點紀錄</div><div>點上方 Step 1 新增第一筆吧</div></div>`;
+    } else {
+      el.innerHTML=`<div class="outing-empty-state"><div class="et">選擇上方日期查看內容</div></div>`;
+    }
+    return;
+  }
+
+  const outing=outings.find(o=>o.date===outingSelectedDate);
+  if(!outing){
+    currentOutingId=null;
+    if(step2btn)step2btn.classList.add('disabled');
+    el.innerHTML=`<div class="outing-empty-state"><div class="et">這天還沒有踩點紀錄</div><div>點上方 Step 1 新增吧</div></div>`;
+    return;
+  }
+
+  currentOutingId=outing.id;
+  if(step2btn)step2btn.classList.remove('disabled');
+
+  const compStr=formatCompanionsSummary(outing.companions);
+  const weatherStr=outing.weather||'';
+
+  let html=`<div class="finalcard">
+    <div class="toprow">
+      <div class="nm">${outing.name||'未命名踩點'}</div>
+      <div class="actions">
+        <button class="evab ed" onclick="openEditOuting()"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="evab" style="background:#FFE0CC;" onclick="deleteOuting()"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      </div>
+    </div>
+    ${outing.memo?`<div class="memo">${outing.memo}</div>`:''}
+    <div class="hr"></div>
+    <div class="bottomrow">
+      <div class="comp"${compStr?'':' style="color:rgba(1,61,90,.35);"'}><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>${compStr||'未填寫旅伴'}</span></div>
+      ${weatherStr?`<div class="weather"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>${weatherStr}</div>`:''}
+    </div>
+  </div>
+  <div class="shdr">時程事件</div>
+  <div class="tlw" id="outing-tl-container" style="padding:0;"></div>`;
+
+  el.innerHTML=html;
+  renderOutingEventTimeline(outing);
+}
+
+function renderOutingEventTimeline(outing){
+  const tl=document.getElementById('outing-tl-container');
+  if(!tl)return;
+  const events=(outing.events||[]).slice().sort((a,b)=>timeSort(a.startTime)-timeSort(b.startTime));
+  if(events.length===0){
+    tl.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg><div class="et">還沒有時程事件</div><div class="es">點上方 Step 2 新增第一個事件</div></div>`;
+    return;
+  }
+  const typeColor={景點:'',展覽:'mn',餐廳:'cr',電影:'lv',戶外活動:'sk',購物:'lv',其他:''};
+  const typePill={景點:'py',展覽:'pg',餐廳:'pr',電影:'pp',戶外活動:'pb',購物:'pp',其他:'pz'};
+  tl.innerHTML=events.map((ev,i)=>{
+    const isLast=i===events.length-1;
+    const isExtended=timeSort(ev.startTime)>=24*60;
+    const displayTime=formatEventTime(ev.startTime,isExtended);
+    const tagsHtml=ev.tags?splitTags(ev.tags).map(t=>`<span style="font-size:11px;font-weight:700;background:rgba(1,61,90,.08);color:#444;border:1px solid rgba(1,61,90,.15);border-radius:3px;padding:2px 8px;font-family:'Courier New',Courier,monospace;">${t}</span>`).join(''):'';
+    const ratingHtml=ev.rating?`<span style="font-size:11px;color:#666;font-weight:600;">★ ${ev.rating}/10</span>`:'';
+    return `<div class="tle">
+      <div class="tlt"${isExtended?' style="color:#e05500;font-weight:800;"':''}>${displayTime}</div>
+      <div class="tldc">
+        <div class="tld ${typeColor[ev.type]||''}"></div>
+        ${!isLast?'<div class="tlc"></div>':''}
+      </div>
+      <div class="evc">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:3px;">
+          <div style="font-size:14px;font-weight:900;color:#013D5A;flex:1;">${ev.place||ev.desc||'（未命名）'}</div>
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+            <span class="evtype ${typePill[ev.type]||'pz'}" style="font-size:10px;">${ev.type||'其他'}</span>
+            <button class="evab ed" onclick="editOutingEvent('${ev.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="evab" style="background:#FFE0CC;" onclick="deleteOutingEvent('${ev.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+          </div>
+        </div>
+        ${ev.desc&&ev.place?`<div style="font-size:13px;color:#333;margin-bottom:5px;line-height:1.4;">${ev.desc}</div>`:''}
+        ${tagsHtml?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px;">${tagsHtml}</div>`:''}
+        ${ev.note?`<div style="display:flex;align-items:flex-start;gap:5px;font-size:11px;color:#666;padding:4px 8px;background:rgba(1,61,90,.04);border-radius:4px;margin-bottom:3px;"><svg width="11" height="11" viewBox="0 0 24 24" stroke="#666" fill="none" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>${ev.note}</div>`:''}
+        ${ratingHtml?`<div style="margin-top:2px;">${ratingHtml}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openNewOuting(){
+  editingOutingId=null;
+  resetOutingForm();
+  const title=document.querySelector('#outing-ov .shtl');
+  if(title)title.textContent='新增日常踩點';
+  const saveBtn=document.getElementById('outing-save-btn');
+  if(saveBtn){saveBtn.textContent='儲存踩點';saveBtn.onclick=saveOuting;}
+  if(outingSelectedDate)v('ot-date',outingSelectedDate);
+  openSh('outing-ov');
+}
+function resetOutingForm(){
+  ['ot-name','ot-date','ot-city','ot-memo','ot-tags','ot-weather'].forEach(id=>v(id,''));
+  const tw=document.getElementById('ot-tags-wrap');if(tw)tw.querySelectorAll('.ctag').forEach(t=>t.remove());
+  const ctw=document.getElementById('ot-comp-wrap');
+  if(ctw){const cin=document.getElementById('ot-comp-cin');ctw.innerHTML='';if(cin){ctw.appendChild(cin);cin.value='';}}
+}
+let editingOutingId=null;
+function saveOuting(){
+  const name=gv('ot-name');
+  if(!name){showToast('請填寫踩點名稱');return;}
+  const outings=getOutings();
+  const comps=[...document.querySelectorAll('#ot-comp-wrap .ctag')].map(t=>t.getAttribute('data-name')||t.querySelector('.ctag-name')?.textContent||'').filter(Boolean);
+  if(editingOutingId){
+    const idx=outings.findIndex(o=>o.id===editingOutingId);
+    if(idx>=0){
+      outings[idx]={...outings[idx],name,date:gv('ot-date'),city:gv('ot-city'),weather:gv('ot-weather'),
+        companions:comps,tags:gv('ot-tags'),memo:gv('ot-memo')};
+    }
+    saveOutings(outings);
+    editingOutingId=null;
+    resetOutingForm();
+    closeSh('outing-ov');
+    showToast('✓ 踩點已更新');
+    renderOutingList();
+    return;
+  }
+  const outing={
+    id:uid(),name,date:gv('ot-date'),city:gv('ot-city'),weather:gv('ot-weather'),
+    companions:comps,tags:gv('ot-tags'),memo:gv('ot-memo'),
+    events:[],createdAt:Date.now()
+  };
+  outings.push(outing);
+  saveOutings(outings);
+  resetOutingForm();
+  closeSh('outing-ov');
+  showToast('✓ 踩點已建立');
+  if(outing.date)outingSelectedDate=outing.date;
+  renderOutingList();
+}
+function openEditOuting(){
+  const outing=getOutings().find(o=>o.id===currentOutingId);
+  if(!outing)return;
+  editingOutingId=outing.id;
+  v('ot-name',outing.name);v('ot-date',outing.date);v('ot-city',outing.city);v('ot-memo',outing.memo);
+  v('ot-weather',outing.weather||'');
+  loadTagsToWrap(outing.tags||'','ot-tags-wrap','ot-tags');
+  const ctw=document.getElementById('ot-comp-wrap');const cin=document.getElementById('ot-comp-cin');
+  if(ctw&&cin){
+    ctw.innerHTML='';ctw.appendChild(cin);cin.value='';
+    (outing.companions||[]).forEach(c=>{
+      const tag=document.createElement('span');tag.className='ctag';
+      tag.setAttribute('data-name',c);
+      tag.innerHTML='<span class="ctag-name">'+c+'</span><button class="ctrm" onclick="this.parentElement.remove()">×</button>';
+      ctw.insertBefore(tag,cin);
+    });
+  }
+  const title=document.querySelector('#outing-ov .shtl');
+  if(title)title.textContent='編輯日常踩點';
+  const saveBtn=document.getElementById('outing-save-btn');
+  if(saveBtn){saveBtn.textContent='更新踩點';saveBtn.onclick=saveOuting;}
+  openSh('outing-ov');
+}
+let deletingOutingId=null;
+function deleteOuting(){
+  deletingOutingId=currentOutingId;
+  openSh('confirm-delete-outing-ov');
+}
+function confirmDeleteOuting(){
+  if(!deletingOutingId)return;
+  const outings=getOutings().filter(o=>o.id!==deletingOutingId);
+  saveOutings(outings);
+  deletingOutingId=null;
+  closeSh('confirm-delete-outing-ov');
+  currentOutingId=null;
+  showToast('✓ 已刪除');
+  navigateTo('outings');
+}
+function openOuting(id){
+  currentOutingId=id;
+  renderOutingDetail();
+  navigateTo('outing-detail');
+}
+function renderOutingDetail(){
+  const outing=getOutings().find(o=>o.id===currentOutingId);
+  if(!outing)return;
+  setEl('od-name',outing.name||'未命名踩點');
+  const weekday=outing.date?['日','一','二','三','四','五','六'][new Date(outing.date).getDay()]:'';
+  setEl('od-date',outing.date?`${fmtDate(outing.date)}(${weekday})`:'日期未填');
+  const memoEl=document.getElementById('od-memo');
+  if(memoEl){
+    if(outing.memo){memoEl.textContent='"'+outing.memo+'"';memoEl.style.display='block';}
+    else memoEl.style.display='none';
+  }
+  // 時程事件時間軸（重用旅行詳細頁的時間軸樣式）
+  const tl=document.getElementById('od-tl-container');
+  if(!tl)return;
+  const events=(outing.events||[]).slice().sort((a,b)=>timeSort(a.startTime)-timeSort(b.startTime));
+  if(events.length===0){
+    tl.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg><div class="et">還沒有時程事件</div><div class="es">點上方按鈕新增第一個事件</div></div>`;
+    return;
+  }
+  const typeColor={景點:'',展覽:'mn',餐廳:'cr',電影:'lv',戶外活動:'sk',購物:'lv',其他:''};
+  const typePill={景點:'py',展覽:'pg',餐廳:'pr',電影:'pp',戶外活動:'pb',購物:'pp',其他:'pz'};
+  tl.innerHTML=events.map((ev,i)=>{
+    const isLast=i===events.length-1;
+    const isExtended=timeSort(ev.startTime)>=24*60;
+    const displayTime=formatEventTime(ev.startTime,isExtended);
+    const tagsHtml=ev.tags?splitTags(ev.tags).map(t=>`<span style="font-size:11px;font-weight:700;background:rgba(1,61,90,.08);color:#444;border:1px solid rgba(1,61,90,.15);border-radius:3px;padding:2px 8px;font-family:'Courier New',Courier,monospace;">${t}</span>`).join(''):'';
+    const ratingHtml=ev.rating?`<span style="font-size:11px;color:#666;font-weight:600;">★ ${ev.rating}/10</span>`:'';
+    return `<div class="tle">
+      <div class="tlt"${isExtended?' style="color:#e05500;font-weight:800;"':''}>${displayTime}</div>
+      <div class="tldc">
+        <div class="tld ${typeColor[ev.type]||''}"></div>
+        ${!isLast?'<div class="tlc"></div>':''}
+      </div>
+      <div class="evc">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:3px;">
+          <div style="font-size:14px;font-weight:900;color:#013D5A;flex:1;">${ev.place||ev.desc||'（未命名）'}</div>
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+            <span class="evtype ${typePill[ev.type]||'pz'}" style="font-size:10px;">${ev.type||'其他'}</span>
+            <button class="evab ed" onclick="editOutingEvent('${ev.id}')" style="width:26px;height:26px;border-radius:6px;border:1.5px solid var(--ink);background:var(--white);"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="evab" onclick="deleteOutingEvent('${ev.id}')" style="width:26px;height:26px;border-radius:6px;border:1.5px solid var(--ink);background:#FFE0CC;"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+          </div>
+        </div>
+        ${ev.desc&&ev.place?`<div style="font-size:13px;color:#333;margin-bottom:5px;line-height:1.4;">${ev.desc}</div>`:''}
+        ${tagsHtml?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px;">${tagsHtml}</div>`:''}
+        ${ev.note?`<div style="display:flex;align-items:flex-start;gap:5px;font-size:11px;color:#666;padding:4px 8px;background:rgba(1,61,90,.04);border-radius:4px;margin-bottom:3px;"><svg width="11" height="11" viewBox="0 0 24 24" stroke="#666" fill="none" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>${ev.note}</div>`:''}
+        ${ratingHtml?`<div style="margin-top:2px;">${ratingHtml}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 日常踩點：時程事件 CRUD ──
+let editingOutingEventId=null;
+function openNewOutingEvent(){
+  editingOutingEventId=null;
+  resetOutingEventForm();
+  openSh('oqa-ov');
+}
+function editOutingEvent(eid){
+  const outing=getOutings().find(o=>o.id===currentOutingId);
+  const ev=(outing?.events||[]).find(e=>e.id===eid);
+  if(!ev)return;
+  editingOutingEventId=eid;
+  resetOutingEventForm();
+  document.querySelectorAll('#oqa-ov .tbtn').forEach(b=>b.classList.toggle('sel',b.textContent.trim()===ev.type));
+  setTimeInputs('oev-start',ev.startTime,timeSort(ev.startTime)>=24*60);
+  setTimeInputs('oev-end',ev.endTime,timeSort(ev.endTime)>=24*60);
+  v('oev-place',ev.place);v('oev-desc',ev.desc);
+  v('oev-note',ev.note);
+  loadTagsToWrap(ev.tags||'','oev-tags-wrap','oev-tags');
+  const mc=document.getElementById('oev-map-check');
+  if(mc)mc.checked=ev.mapEnabled||false;
+  toggleOutingMapLink();
+  updateOutingMapLink(ev.place||'');
+  setOutingRating(ev.rating||0);
+  const title=document.querySelector('#oqa-ov .shtl');
+  if(title)title.textContent='編輯時程事件';
+  openSh('oqa-ov');
+}
+function resetOutingEventForm(){
+  ['oev-place','oev-desc','oev-tags','oev-note'].forEach(id=>v(id,''));
+  v('oev-start','');v('oev-end','');
+  const trg1=document.getElementById('oev-start-trigger');if(trg1){trg1.textContent='選擇時間';trg1.classList.add('empty');}
+  const trg2=document.getElementById('oev-end-trigger');if(trg2){trg2.textContent='選擇時間';trg2.classList.add('empty');}
+  const otw=document.getElementById('oev-tags-wrap');if(otw)otw.querySelectorAll('.ctag').forEach(t=>t.remove());
+  document.querySelectorAll('#oqa-ov .tbtn').forEach((b,i)=>b.classList.toggle('sel',i===0));
+  setOutingRating(0);
+  const ml=document.getElementById('outing-map-link');if(ml)ml.style.display='none';
+  const mc=document.getElementById('oev-map-check');if(mc)mc.checked=false;
+  const title=document.querySelector('#oqa-ov .shtl');
+  if(title)title.textContent='新增時程事件';
+}
+function saveOutingEvent(){
+  const outings=getOutings();
+  const outing=outings.find(o=>o.id===currentOutingId);
+  if(!outing){showToast('請先選擇踩點紀錄');return;}
+  syncHiddenTags('oev-tags','oev-tags-wrap');
+  const selType=document.querySelector('#oqa-ov .tbtn.sel');
+  const ev={
+    id:editingOutingEventId||uid(),
+    type:selType?selType.textContent.trim():'其他',
+    startTime:gv('oev-start'),endTime:gv('oev-end'),
+    place:gv('oev-place'),desc:gv('oev-desc'),
+    mapEnabled:document.getElementById('oev-map-check')?.checked||false,
+    tags:gv('oev-tags'),note:gv('oev-note'),
+    rating:outingCurrentRating||null
+  };
+  if(!outing.events)outing.events=[];
+  if(editingOutingEventId){
+    const idx=outing.events.findIndex(e=>e.id===editingOutingEventId);
+    if(idx>=0)outing.events[idx]=ev;
+  } else {
+    outing.events.push(ev);
+  }
+  editingOutingEventId=null;
+  outingCurrentRating=0;
+  saveOutings(outings);
+  resetOutingEventForm();
+  closeSh('oqa-ov');
+  showToast('✓ 事件已儲存');
+  renderOutingDayList();
+}
+let deletingOutingEventId=null;
+function deleteOutingEvent(eid){
+  deletingOutingEventId=eid;
+  openSh('confirm-delete-outing-event-ov');
+}
+function confirmDeleteOutingEvent(){
+  if(!deletingOutingEventId)return;
+  const outings=getOutings();
+  const outing=outings.find(o=>o.id===currentOutingId);
+  if(outing){
+    outing.events=(outing.events||[]).filter(e=>e.id!==deletingOutingEventId);
+    saveOutings(outings);
+  }
+  deletingOutingEventId=null;
+  closeSh('confirm-delete-outing-event-ov');
+  renderOutingDayList();
+  showToast('✓ 已刪除');
+}
+let outingCurrentRating=0;
+function setOutingRating(n){
+  outingCurrentRating=n;
+  document.querySelectorAll('#ordots .rdot').forEach((d,i)=>{
+    const k=i+1;
+    d.classList.toggle('fi2',k<=n&&n<9);
+    d.classList.toggle('hi',k<=n&&n>=9);
+    if(k>n){d.classList.remove('fi2');d.classList.remove('hi');}
+  });
+}
+function buildOutingRating(){
+  const wrap=document.getElementById('ordots');
+  if(!wrap)return;
+  wrap.innerHTML='';
+  for(let i=1;i<=10;i++){
+    const dot=document.createElement('div');
+    dot.className='rdot';
+    dot.textContent=i;
+    dot.onclick=()=>setOutingRating(i);
+    wrap.appendChild(dot);
+  }
+  setOutingRating(outingCurrentRating);
+}
+function toggleOutingMapLink(){
+  const mc=document.getElementById('oev-map-check');
+  const ml=document.getElementById('outing-map-link');
+  if(!mc||!ml)return;
+  ml.style.display=mc.checked?'inline-flex':'none';
+  if(mc.checked)updateOutingMapLink(gv('oev-place'));
+}
+function updateOutingMapLink(place){
+  const mc=document.getElementById('oev-map-check');
+  const ml=document.getElementById('outing-map-link');
+  if(!mc||!ml||!mc.checked)return;
+  ml.href=place?`https://maps.google.com/search?q=${encodeURIComponent(place)}`:'#';
 }
 
 // ── RENDER: Home ──
@@ -1601,6 +2339,7 @@ function openEditExpense(eid){
   const trip=trips.find(t=>t.id===currentTripId);
   const exp=(trip?.expenses||[]).find(e=>e.id===eid);
   if(!exp)return;
+  populateCurrencySelect();
   v('ex-name',exp.name);
   const amtEl=document.getElementById('ex-amount');
   if(amtEl)amtEl.value=(parseFloat(exp.amount)||0).toLocaleString();
@@ -2419,6 +3158,7 @@ function setFilter(f,el){cf=f;document.querySelectorAll('#page-search .fchip').f
 // 將輸入的時/分轉成 HH:MM 字串存入隱藏欄位，並標示凌晨延伸提示
 // ── 滾輪式時間選擇器 ──
 let twpTarget=null; // 'start' or 'end'
+let twpPrefix='ev'; // 'ev' (旅行事件) or 'oev' (日常踩點事件)
 const TWP_ITEM_H=40;
 
 function buildWheelCol(colEl, range, current, isHourCol){
@@ -2442,15 +3182,16 @@ function getWheelValue(colEl){
   return 0;
 }
 
-function openTimeWheel(target){
+function openTimeWheel(target,prefix){
   twpTarget=target;
+  twpPrefix=prefix||'ev';
   const overlay=document.getElementById('twp-overlay');
   const head=document.getElementById('twp-head');
   if(head)head.textContent=target==='start'?'選擇開始時間':'選擇結束時間';
-  const hidden=document.getElementById('ev-'+target);
+  const hidden=document.getElementById(twpPrefix+'-'+target);
   const curVal=hidden?hidden.value:'';
   // 判斷目前是否已標示為凌晨延伸（用 trigger 按鈕的 class 判斷）
-  const trigger=document.getElementById('ev-'+target+'-trigger');
+  const trigger=document.getElementById(twpPrefix+'-'+target+'-trigger');
   const wasExt=trigger&&trigger.classList.contains('extended');
   let curH=9,curM=0;
   if(curVal){
@@ -2474,6 +3215,7 @@ function closeTimeWheelBg(e){
 
 function confirmTimeWheel(){
   if(!twpTarget)return;
+  const prefix=twpPrefix||'ev';
   const hourCol=document.getElementById('twp-hour-col');
   const minCol=document.getElementById('twp-min-col');
   const hv=getWheelValue(hourCol);
@@ -2482,8 +3224,8 @@ function confirmTimeWheel(){
   const storeH=isExt?hv-24:hv;
   const timeStr=String(storeH).padStart(2,'0')+':'+String(mv).padStart(2,'0');
   const displayStr=String(hv).padStart(2,'0')+':'+String(mv).padStart(2,'0');
-  document.getElementById('ev-'+twpTarget).value=timeStr;
-  const trigger=document.getElementById('ev-'+twpTarget+'-trigger');
+  document.getElementById(prefix+'-'+twpTarget).value=timeStr;
+  const trigger=document.getElementById(prefix+'-'+twpTarget+'-trigger');
   if(trigger){
     trigger.textContent=displayStr;
     trigger.classList.remove('empty');
@@ -2494,8 +3236,9 @@ function confirmTimeWheel(){
 
 function clearTimeWheel(){
   if(!twpTarget)return;
-  document.getElementById('ev-'+twpTarget).value='';
-  const trigger=document.getElementById('ev-'+twpTarget+'-trigger');
+  const prefix=twpPrefix||'ev';
+  document.getElementById(prefix+'-'+twpTarget).value='';
+  const trigger=document.getElementById(prefix+'-'+twpTarget+'-trigger');
   if(trigger){
     trigger.textContent='選擇時間';
     trigger.classList.add('empty');
@@ -3197,10 +3940,94 @@ function toggleMapLink(){
   <div class="tlw" id="tl-container"></div>
 </div>
 
+<!-- ══ OUTINGS LIST ══ -->
+<div id="page-outings" class="page">
+  <div class="phdr">
+    <div style="font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(1,61,90,.3);font-family:'Courier New',Courier,monospace;margin-bottom:3px;">DAILY OUTINGS</div>
+    <div class="disp">日常踩點</div>
+    <div class="cap" style="margin-top:2px;color:rgba(1,61,90,.4);" id="outings-subtitle">0 筆紀錄</div>
+  </div>
+
+  <!-- 清單日期卡 hero -->
+  <div class="ohero">
+    <div class="ohero-bgnum" id="outing-hero-bgnum">6</div>
+    <div class="ohero-top">
+      <button type="button" class="ohero-nav" onclick="changeOutingMonth(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div class="m" id="outing-hero-label">—</div>
+      <button type="button" class="ohero-nav" onclick="changeOutingMonth(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+    <div class="ohero-chips" id="outing-hero-chips"></div>
+  </div>
+
+  <div class="sa">
+    <div class="steprow">
+      <button type="button" class="stepbtn primary" onclick="openNewOuting()">① 新增踩點</button>
+      <button type="button" class="stepbtn primary" id="outing-step2-btn" onclick="handleStep2Click()">② 新增時程</button>
+    </div>
+
+    <!-- 展開/收合完整月曆 -->
+    <button type="button" class="ocal-toggle" id="outing-cal-toggle" onclick="toggleOutingCal()">
+      <svg class="cv" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="ocal-toggle-label">展開完整月曆</span>
+    </button>
+    <div class="ocal-panel" id="outing-cal-panel">
+      <div class="ocal-wrap">
+        <div class="ocal-gridwrap">
+          <div class="ocal-weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+          <div class="ocal-grid" id="outing-cal-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="outing-content-area"></div>
+    <div style="height:16px;"></div>
+  </div>
+</div>
+
+<!-- ══ OUTING DETAIL ══ -->
+<div id="page-outing-detail" class="page">
+  <div style="background:var(--white);padding:14px 16px 0;border-bottom:1px solid rgba(1,61,90,.08);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <button class="bbtn" onclick="navigateTo('outings')">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>踩點列表
+      </button>
+      <div style="display:flex;gap:5px;">
+        <button onclick="deleteOuting()" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:4px 11px;border-radius:8px;border:1.5px solid rgba(1,61,90,.2);background:var(--white);cursor:pointer;font-family:inherit;color:rgba(1,61,90,.5);"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.3"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>刪除</button>
+        <button onclick="openEditOuting()" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:4px 11px;border-radius:8px;border:1.5px solid rgba(1,61,90,.3);background:var(--white);cursor:pointer;font-family:inherit;color:#013D5A;"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.3"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>編輯</button>
+      </div>
+    </div>
+    <div style="height:4px;width:36px;background:#BDD3CE;border-radius:99px;margin-bottom:10px;"></div>
+    <div style="font-size:19px;font-weight:900;color:#013D5A;margin-bottom:5px;" id="od-name">未命名踩點</div>
+    <div style="font-size:12px;font-weight:700;color:var(--ink3);margin-bottom:8px;" id="od-date">—</div>
+    <div id="od-memo" style="font-size:12px;font-style:italic;color:rgba(1,61,90,.6);margin-bottom:12px;display:none;"></div>
+  </div>
+
+  <!-- 新增時程事件按鈕 -->
+  <div style="padding:12px 16px;background:var(--white);border-bottom:1px solid rgba(1,61,90,.06);">
+    <button type="button" onclick="openNewOutingEvent()"
+      style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
+             font-size:13px;font-weight:900;padding:11px 16px;cursor:pointer;font-family:inherit;
+             background:#013D5A;
+             border:2px solid #013D5A;border-radius:8px;box-shadow:3px 3px 0 rgba(1,61,90,.3);color:#FCF3E3;">
+      ＋ 新增時程事件
+    </button>
+  </div>
+
+  <!-- Timeline -->
+  <div class="tlw" id="od-tl-container"></div>
+</div>
+
+
 <!-- ══ STORIES ══ -->
 <div id="page-stories" class="page">
-  <div class="phdr"><div class="disp">故事 & 排行榜</div><div class="cap" style="margin-top:2px;">旅行人生，重新成為故事</div></div>
-  <div class="sa">
+  <div class="phdr"><div class="disp">足跡</div><div class="cap" style="margin-top:2px;">旅行人生，重新成為故事</div></div>
+  <div class="pilltabs">
+    <button class="pilltab on" id="sm-tb-rank" onclick="showStoryMapTab('rank')"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>排行榜</button>
+    <button class="pilltab" id="sm-tb-map" onclick="showStoryMapTab('map')"><svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>地圖</button>
+  </div>
+  <div id="sm-tab-rank" class="sa">
+    <div class="pilltabs-spacer"></div>
     <!-- 故事頁說明卡 — 票根風格 -->
     <div style="background:#FCF3E3;background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(1,61,90,.04) 5px,rgba(1,61,90,.04) 6px);border:2px solid #013D5A;border-radius:8px;box-shadow:3px 3px 0 #013D5A;padding:14px;margin-bottom:12px;">
       <div style="font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(1,61,90,.4);font-family:'Courier New',Courier,monospace;margin-bottom:6px;">TRAVEL STORIES</div>
@@ -3219,12 +4046,8 @@ function toggleMapLink(){
     <div id="companion-list"><div class="empty"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><div class="et">還沒有旅伴</div><div class="es">新增旅行時加入旅伴成員</div></div></div>
     <div style="height:16px;"></div>
   </div>
-</div>
-
-<!-- ══ MAP ══ -->
-<div id="page-map" class="page">
-  <div class="phdr"><div class="disp">旅行足跡</div><div class="cap" style="margin-top:2px;" id="map-sub">0 個國家</div></div>
-  <div class="sa">
+  <div id="sm-tab-map" class="sa" style="display:none;">
+    <div class="pilltabs-spacer"></div>
     <div class="hero-full" style="background:var(--white);">
       <div class="hero-inner">
         <div style="font-size:14px;font-weight:900;margin-bottom:3px;">你的世界地圖</div>
@@ -3347,6 +4170,11 @@ function toggleMapLink(){
       <div class="setr"><div class="setl"><div class="setic" style="background:var(--yellow);"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div><div><div class="setlb">深色模式</div><div class="setsb">切換深色/淺色</div></div></div><button class="tgl" onclick="this.classList.toggle('on');showToast('切換中')"></button></div>
       <div class="setr" style="border-bottom:none;"><div class="setl"><div class="setic" style="background:var(--blue);"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></div><div><div class="setlb">主題色</div><div class="setsb">目前：黃色</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
     </div>
+    <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">幣別</div>
+    <div class="card" style="margin-bottom:11px;padding:4px 11px;">
+      <div id="currency-list-settings"></div>
+      <div class="setr" onclick="openSh('add-currency-ov')" style="border-bottom:none;"><div class="setl"><div class="setic" style="background:var(--mint);"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div><div class="setlb">新增幣別</div><div class="setsb">記帳時可以選用</div></div></div></div>
+    </div>
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">資料</div>
     <div class="card" style="margin-bottom:11px;padding:4px 11px;">
       <div class="setr" onclick="exportData()"><div class="setl"><div class="setic" style="background:var(--mint);"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><div><div class="setlb">匯出 JSON</div><div class="setsb">備份所有資料</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
@@ -3375,8 +4203,8 @@ function toggleMapLink(){
 <nav class="bnav">
   <button class="ni on" id="nav-home" onclick="navigateTo('home')"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><span>首頁</span></button>
   <button class="ni" id="nav-trips" onclick="navigateTo('trips')"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg></div><span>旅行</span></button>
-  <button class="ni" id="nav-stories" onclick="navigateTo('stories')"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><span>故事</span></button>
-  <button class="ni" id="nav-map" onclick="navigateTo('map')"><div class="ni-icon"><svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div><span>地圖</span></button>
+  <button class="ni" id="nav-outings" onclick="navigateTo('outings')"><div class="ni-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><span>日常踩點</span></button>
+  <button class="ni" id="nav-stories" onclick="navigateTo('stories')"><div class="ni-icon"><svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div><span>足跡</span></button>
   <button class="ni" id="nav-settings" onclick="navigateTo('settings')"><div class="ni-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></div><span>設定</span></button>
 </nav>
 
@@ -3442,25 +4270,6 @@ function toggleMapLink(){
     <input type="hidden" id="ev-start">
     <input type="hidden" id="ev-end">
 
-    <!-- 滾輪選擇器 overlay -->
-    <div class="twp-overlay" id="twp-overlay" onclick="closeTimeWheelBg(event)">
-      <div class="twp-sheet" onclick="event.stopPropagation()">
-        <div class="twp-head" id="twp-head">選擇時間</div>
-        <div class="twp-area">
-          <div class="twp-center-line"></div>
-          <div class="twp-col" id="twp-hour-col"></div>
-          <div class="twp-colon">:</div>
-          <div class="twp-col" id="twp-min-col"></div>
-        </div>
-        <div class="twp-foot">
-          <div class="twp-foot-row">
-            <div class="twp-hint">上下滑動選擇 · 00-05為凌晨延伸</div>
-            <button type="button" class="twp-clear" onclick="clearTimeWheel()">清空</button>
-          </div>
-          <button type="button" class="twp-confirm" onclick="confirmTimeWheel()">確認時間</button>
-        </div>
-      </div>
-    </div>
     <div class="fr"><label class="fl">事件名稱 / 地點</label><input class="fi" id="ev-place" type="text" placeholder="例：高千穗峽、午餐、高鐵" oninput="updateMapLink(this.value)"></div>
     <div style="display:flex;align-items:center;gap:8px;margin:-4px 0 8px;">
       <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink3);cursor:pointer;user-select:none;">
@@ -3482,6 +4291,78 @@ function toggleMapLink(){
     </div>
     <div class="fr"><label class="fl">備註</label><input class="fi" id="ev-note" type="text" placeholder="小叮嚀..."></div>
     <button class="btn bink blg" style="margin-top:9px;" onclick="saveEvent()">儲存事件</button>
+  </div>
+</div>
+
+<!-- 時間滾輪選擇器 — 全域共用，供旅行事件(ev)與日常踩點事件(oev)表單共同使用 -->
+<div class="twp-overlay" id="twp-overlay" onclick="closeTimeWheelBg(event)">
+  <div class="twp-sheet" onclick="event.stopPropagation()">
+    <div class="twp-head" id="twp-head">選擇時間</div>
+    <div class="twp-area">
+      <div class="twp-center-line"></div>
+      <div class="twp-col" id="twp-hour-col"></div>
+      <div class="twp-colon">:</div>
+      <div class="twp-col" id="twp-min-col"></div>
+    </div>
+    <div class="twp-foot">
+      <div class="twp-foot-row">
+        <div class="twp-hint">上下滑動選擇 · 00-05為凌晨延伸</div>
+        <button type="button" class="twp-clear" onclick="clearTimeWheel()">清空</button>
+      </div>
+      <button type="button" class="twp-confirm" onclick="confirmTimeWheel()">確認時間</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Outing Event (日常踩點時程事件) -->
+<div class="ov" id="oqa-ov" onclick="closeBg(event,'oqa-ov')">
+  <div class="sh">
+    <div class="shndl"></div>
+    <button class="shx" onclick="closeSh('oqa-ov')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="shtl">新增時程事件</div>
+    <div class="trow">
+      <button class="tbtn sel" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>景點</button>
+      <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>展覽</button>
+      <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/></svg>餐廳</button>
+      <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H4z"/><path d="M2 20h20"/><polygon points="9 8 9 12 13 10 9 8"/></svg>電影</button>
+      <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-1 .1-1.3.4l-.7.7c-.5.5-.3 1.3.3 1.5L9 11l-2 2H4l-1.5 1.5L5 16l2.5 2.5L9 17v-3l2-2 1.6 6.2c.2.6 1 .8 1.5.3l.7-.7c.3-.3.4-.8.3-1.3z"/></svg>戶外活動</button>
+      <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg>購物</button>
+      <button class="tbtn" onclick="selT(this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>其他</button>
+    </div>
+    <div class="f2c fr">
+      <div>
+        <label class="fl">開始時間</label>
+        <button type="button" class="twp-trigger empty" id="oev-start-trigger" onclick="openTimeWheel('start','oev')">選擇時間</button>
+      </div>
+      <div>
+        <label class="fl">結束時間</label>
+        <button type="button" class="twp-trigger empty" id="oev-end-trigger" onclick="openTimeWheel('end','oev')">選擇時間</button>
+      </div>
+    </div>
+    <input type="hidden" id="oev-start">
+    <input type="hidden" id="oev-end">
+
+    <div class="fr"><label class="fl">事件名稱 / 地點</label><input class="fi" id="oev-place" type="text" placeholder="例：木柵動物園、午餐" oninput="updateOutingMapLink(this.value)"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin:-4px 0 8px;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink3);cursor:pointer;user-select:none;">
+        <input type="checkbox" id="oev-map-check" onchange="toggleOutingMapLink()" style="width:14px;height:14px;cursor:pointer;">
+        加入 Google Maps 導連
+      </label>
+      <a class="mlink" id="outing-map-link" href="#" target="_blank" style="display:none;font-size:11px;">
+        <svg viewBox="0 0 24 24" style="width:11px;height:11px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>開啟地圖 →
+      </a>
+    </div>
+    <div class="fr"><label class="fl">一句話描述</label><input class="fi" id="oev-desc" type="text" placeholder="寫下最難忘的事..."></div>
+    <div class="fr"><label class="fl">評分（1–10）</label><div class="rrow" id="ordots"></div></div>
+    <div class="fr">
+      <label class="fl">標籤（輸入後按 Enter）</label>
+      <div class="ctw" id="oev-tags-wrap" onclick="document.getElementById('oev-tags-cin').focus()" style="min-height:36px;">
+        <input class="cin" id="oev-tags-cin" type="text" placeholder="輸入標籤按 Enter" onkeydown="addTagToWrap(event,'oev-tags-wrap','oev-tags')">
+      </div>
+      <input type="hidden" id="oev-tags">
+    </div>
+    <div class="fr"><label class="fl">備註</label><input class="fi" id="oev-note" type="text" placeholder="小叮嚀..."></div>
+    <button class="btn bink blg" style="margin-top:9px;" onclick="saveOutingEvent()">儲存事件</button>
   </div>
 </div>
 
@@ -3560,7 +4441,7 @@ function toggleMapLink(){
       <button class="tbtn" onclick="selT(this)">其他</button>
     </div>
     <div class="fr"><label class="fl">費用項目</label><input class="fi" id="ex-name" type="text" placeholder="例：高千穗峽划船"></div>
-    <div class="f2c fr"><div><label class="fl">金額</label><input class="fi" id="ex-amount" type="text" inputmode="numeric" placeholder="2,000" oninput="fmtNum(this)" onblur="fmtNum(this)"></div><div><label class="fl">幣別</label><select class="fi" id="ex-currency"><option>TWD</option><option>JPY</option><option>USD</option><option>KRW</option><option>EUR</option></select></div></div>
+    <div class="f2c fr"><div><label class="fl">金額</label><input class="fi" id="ex-amount" type="text" inputmode="numeric" placeholder="2,000" oninput="fmtNum(this)" onblur="fmtNum(this)"></div><div><label class="fl">幣別</label><select class="fi" id="ex-currency"></select></div></div>
     <div class="fr"><label class="fl">日期</label><input class="fi" id="ex-date" type="date"></div>
     <div class="fr"><label class="fl">備註</label><input class="fi" id="ex-note" type="text" placeholder="每人 2,000 円"></div>
     <button class="btn bink blg" style="margin-top:9px;" onclick="saveExpense()">儲存費用</button>
@@ -3605,6 +4486,37 @@ function toggleMapLink(){
   </div>
 </div>
 
+<!-- Add/Edit Outing -->
+<div class="ov" id="outing-ov" onclick="closeBg(event,'outing-ov')">
+  <div class="sh">
+    <div class="shndl"></div>
+    <button class="shx" onclick="closeSh('outing-ov')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="shtl">新增日常踩點</div>
+    <div class="fr"><label class="fl">名稱</label><input class="fi" id="ot-name" type="text" placeholder="例：週末木柵動物園"></div>
+    <div class="f2c fr"><div><label class="fl">日期</label><input class="fi" id="ot-date" type="date"></div><div><label class="fl">城市</label><input class="fi" id="ot-city" type="text" placeholder="台北"></div></div>
+    <div class="fr"><label class="fl">天氣</label>
+      <select class="fi" id="ot-weather">
+        <option value="">不指定</option>
+        <option>晴天</option>
+        <option>多雲</option>
+        <option>陰天</option>
+        <option>雨天</option>
+        <option>雷陣雨</option>
+        <option>強風</option>
+      </select>
+    </div>
+    <div class="fr"><label class="fl">旅伴</label><div class="ctw" id="ot-comp-wrap" onclick="document.getElementById('ot-comp-cin').focus()"><input class="cin" id="ot-comp-cin" type="text" placeholder="輸入姓名按 Enter" onkeydown="addCompToWrap(event,'ot-comp-wrap')"></div></div>
+    <div class="fr"><label class="fl">標籤（輸入後按 Enter）</label>
+      <div class="ctw" id="ot-tags-wrap" onclick="document.getElementById('ot-tags-cin').focus()" style="min-height:40px;">
+        <input class="cin" id="ot-tags-cin" type="text" placeholder="輸入標籤按 Enter" onkeydown="addTagToWrap(event,'ot-tags-wrap','ot-tags')">
+      </div>
+      <input type="hidden" id="ot-tags">
+    </div>
+    <div class="fr"><label class="fl">一句話 <span style="font-weight:600;color:var(--ink3);">（最多 30 字）</span></label><input class="fi" id="ot-memo" type="text" placeholder="這天最難忘的是..." maxlength="30" oninput="this.nextElementSibling.textContent=this.value.length+'/30'"><span style="font-size:10px;color:var(--ink3);float:right;margin-top:2px;">0/30</span></div>
+    <button class="btn bink blg" id="outing-save-btn" style="margin-top:11px;" onclick="saveOuting()">儲存踩點</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- Confirm Delete Sheet -->
@@ -3636,6 +4548,35 @@ function toggleMapLink(){
   </div>
 </div>
 
+<div class="ov" id="confirm-delete-outing-ov" onclick="closeBg(event,'confirm-delete-outing-ov')">
+  <div class="sh" style="padding:24px 20px 32px;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <svg width="32" height="32" viewBox="0 0 24 24" stroke="#e05500" fill="none" stroke-width="1.8" style="margin-bottom:8px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      <div style="font-size:16px;font-weight:900;margin-bottom:6px;">確定刪除這筆踩點紀錄？</div>
+      <div style="font-size:12px;color:var(--ink3);">所有時程事件將一併移除，刪除後無法復原</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeSh('confirm-delete-outing-ov')" style="flex:1;padding:12px;border-radius:var(--rl);border:var(--bd);background:var(--white);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">取消</button>
+      <button onclick="confirmDeleteOuting()" style="flex:1;padding:12px;border-radius:var(--rl);border:none;background:#e03010;color:white;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">確定刪除</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="confirm-delete-outing-event-ov" onclick="closeBg(event,'confirm-delete-outing-event-ov')">
+  <div class="sh" style="padding:24px 20px 32px;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <svg width="32" height="32" viewBox="0 0 24 24" stroke="#e05500" fill="none" stroke-width="1.8" style="margin-bottom:8px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      <div style="font-size:16px;font-weight:900;margin-bottom:6px;">確定刪除此事件？</div>
+      <div style="font-size:12px;color:var(--ink3);">刪除後無法復原</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeSh('confirm-delete-outing-event-ov')" style="flex:1;padding:12px;border-radius:var(--rl);border:var(--bd);background:var(--white);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">取消</button>
+      <button onclick="confirmDeleteOutingEvent()" style="flex:1;padding:12px;border-radius:var(--rl);border:none;background:#e03010;color:white;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">確定刪除</button>
+    </div>
+  </div>
+</div>
+
+
 <div class="ov" id="confirm-delete-expense-ov" onclick="closeBg(event,'confirm-delete-expense-ov')">
   <div class="sh" style="padding:24px 20px 32px;">
     <div style="text-align:center;margin-bottom:20px;">
@@ -3646,6 +4587,29 @@ function toggleMapLink(){
     <div style="display:flex;gap:8px;">
       <button onclick="closeSh('confirm-delete-expense-ov')" style="flex:1;padding:12px;border-radius:var(--rl);border:var(--bd);background:var(--white);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">取消</button>
       <button onclick="confirmDeleteExpense()" style="flex:1;padding:12px;border-radius:var(--rl);border:none;background:#e03010;color:white;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">確定刪除</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="add-currency-ov" onclick="closeBg(event,'add-currency-ov')">
+  <div class="sh">
+    <div class="shtl">新增幣別</div>
+    <div class="fr"><label class="fl">幣別代碼</label><input class="fi" id="cur-code-input" type="text" placeholder="例：VND、MYR..." maxlength="6" style="text-transform:uppercase;"></div>
+    <div class="fr"><label class="fl">符號（可留空，預設用代碼顯示）</label><input class="fi" id="cur-sym-input" type="text" placeholder="例：₫、RM..." maxlength="6"></div>
+    <button class="btn bink blg" onclick="saveNewCurrency()" style="width:100%;padding:12px;border-radius:var(--rl);margin-top:6px;">儲存幣別</button>
+  </div>
+</div>
+
+<div class="ov" id="confirm-delete-currency-ov" onclick="closeBg(event,'confirm-delete-currency-ov')">
+  <div class="sh" style="padding:24px 20px 32px;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:32px;margin-bottom:8px;">💱</div>
+      <div style="font-size:16px;font-weight:900;margin-bottom:6px;">確定刪除這個幣別？</div>
+      <div style="font-size:12px;color:var(--ink3);">已記錄的費用不受影響，僅無法再用此幣別新增費用</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeSh('confirm-delete-currency-ov')" style="flex:1;padding:12px;border-radius:var(--rl);border:var(--bd);background:var(--white);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">取消</button>
+      <button onclick="confirmDeleteCurrency()" style="flex:1;padding:12px;border-radius:var(--rl);border:none;background:#e03010;color:white;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">確定刪除</button>
     </div>
   </div>
 </div>
