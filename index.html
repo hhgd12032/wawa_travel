@@ -4,20 +4,49 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>旅行記憶庫</title>
+<script>
+// 提早套用深色模式設定，避免畫面先閃淺色再變深色（FOUC）
+(function(){
+  try{
+    var t=localStorage.getItem('ptk_theme')||'light';
+    document.documentElement.setAttribute('data-theme',t);
+  }catch(e){}
+})();
+</script>
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 
-:root{
+:root,:root[data-theme="light"]{
   --bg:#FCF3E7;--white:#FFFFFF;--ink:#013D5A;--ink2:#1A5276;--ink3:#4A6B7D;
   --yellow:#F5C857;--yd:#D9A93A;--ivory:#F0D9A0;
   --blue:#7FB5D6;--denim:#4D7FA8;--mint:#708C69;--lav:#E8B4B8;--coral:#E8B4B8;
-  --cream:#FCF3E3;--celeste:#BDD3CE;
+  --cream:#FCF3E3;--celeste:#BDD3CE;--cream-deep:#F5EBD8;
   --orange:#F5C857;
-  --bd:2px solid #013D5A;
+  --shadow-c:#013D5A;
+  --ink-on-accent:#013D5A;
+  --bd:2px solid var(--ink);
   --r:12px;--rl:16px;--rxl:20px;--nav:64px;
 }
+/* ── 深色模式（第一階段：CSS 變數機制） ──
+   概念：深夜旅行手帳。背景換成深墨藍，卡片底色改用次深色，
+   --ink 從深藍墨色換成米白色，黃色強調色維持不變。
+   --ink-on-accent 固定維持深藍，給黃/藍/薄荷綠等彩色淺色塊上的文字使用，
+   避免深色模式下文字反轉成淺色、疊在淺色塊上看不清楚。 */
+:root[data-theme="dark"]{
+  --bg:#0E2330;--white:#163245;--ink:#F3E9D8;--ink2:#D8C9A8;--ink3:#9FB2BE;
+  --yellow:#F5C857;--yd:#D9A93A;--ivory:#F0D9A0;
+  --blue:#6FA3C4;--denim:#4D7FA8;--mint:#7FA178;--lav:#D9A0A6;--coral:#D9A0A6;
+  --cream:#1B3A4D;--celeste:#33505A;--cream-deep:#11293A;
+  --orange:#F5C857;
+  --shadow-c:rgba(0,0,0,.55);
+  --ink-on-accent:#013D5A;
+  --bd:2px solid var(--ink);
+  --r:12px;--rl:16px;--rxl:20px;--nav:64px;
+}
+html{transition:background .2s;}
+body{transition:background .2s,color .2s;}
 *{box-sizing:border-box;margin:0;padding:0;}
 html{min-height:100%;width:100%;margin:0;padding:0;overflow-x:hidden;-webkit-text-size-adjust:100%;}
 body{min-height:100%;width:100%;margin:0;padding:0;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--ink);}
@@ -35,9 +64,9 @@ svg{display:block;}
 .ni svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;}
 .ni span{font-size:10px;font-weight:800;letter-spacing:.03em;}
 .ni.on{color:var(--ink);background:none;border:none;}
-.ni.on .ni-icon{background:var(--yellow);border:var(--bd);border-radius:50%;box-shadow:2px 2px 0 var(--ink);}
+.ni.on .ni-icon{background:var(--yellow);border:2px solid var(--ink-on-accent);border-radius:50%;box-shadow:2px 2px 0 var(--ink-on-accent);}
 .ni-icon{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all .15s;}
-@media(min-width:430px){.fab{position:fixed;bottom:calc(var(--nav)+14px);right:18px;width:52px;height:52px;border-radius:50%;border:var(--bd);cursor:pointer;box-shadow:3px 3px 0 var(--ink);display:flex;align-items:center;justify-content:center;z-index:90;font-family:inherit;transition:transform .1s,box-shadow .1s;}}
+@media(min-width:430px){.fab{position:fixed;bottom:calc(var(--nav)+14px);right:18px;width:52px;height:52px;border-radius:50%;border:var(--bd);cursor:pointer;box-shadow:3px 3px 0 var(--shadow-c);display:flex;align-items:center;justify-content:center;z-index:90;font-family:inherit;transition:transform .1s,box-shadow .1s;}}
 
 /* TYPE */
 .disp{font-size:24px;font-weight:900;letter-spacing:-.5px;line-height:1.2;}
@@ -46,51 +75,52 @@ svg{display:block;}
 .lup{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);}
 
 /* CARDS */
-.card{background:var(--white);border-radius:var(--rl);border:var(--bd);padding:13px;box-shadow:3px 3px 0 var(--ink);}
+.card{background:var(--white);border-radius:var(--rl);border:var(--bd);padding:13px;box-shadow:3px 3px 0 var(--shadow-c);}
 .pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;border:1.5px solid var(--ink);}
-.py{background:var(--yellow);color:var(--ink);}
-.pr{background:#FFD0C0;color:var(--ink);}
-.pg{background:#E8F0EC;color:var(--ink);}
-.pb{background:#DCEBF5;color:var(--ink);}
-.pp{background:#E0D4FF;color:var(--ink);}
+.py{background:var(--yellow);color:var(--ink-on-accent);}
+.pr{background:#FFD0C0;color:var(--ink-on-accent);}
+.pg{background:#E8F0EC;color:var(--ink-on-accent);}
+.pb{background:#DCEBF5;color:var(--ink-on-accent);}
+.pp{background:#E0D4FF;color:var(--ink-on-accent);}
 
 /* BTNS */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:800;cursor:pointer;border:var(--bd);font-family:inherit;box-shadow:3px 3px 0 var(--ink);transition:transform .1s,box-shadow .1s;}
-.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink);}
-.bink{background:var(--ink);color:#fff;}
-.by{background:var(--yellow);color:var(--ink);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:800;cursor:pointer;border:var(--bd);font-family:inherit;box-shadow:3px 3px 0 var(--shadow-c);transition:transform .1s,box-shadow .1s;}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow-c);}
+.bink{background:var(--ink-on-accent);color:#FCF3E3;}
+:root[data-theme="dark"] .bink{background:var(--yellow);color:var(--ink-on-accent);border-color:var(--ink-on-accent);}
+.by{background:var(--yellow);color:var(--ink-on-accent);}
 .bbl{background:var(--blue);color:var(--ink);}
 .bgh{background:var(--white);color:var(--ink);}
 .blg{width:100%;padding:13px;font-size:14px;border-radius:var(--rl);}
 
 /* FAB — always fixed bottom-right */
-.fab{position:fixed;bottom:calc(var(--nav)+14px);right:18px;width:52px;height:52px;border-radius:50%;border:var(--bd);cursor:pointer;box-shadow:3px 3px 0 var(--ink);display:flex;align-items:center;justify-content:center;z-index:90;font-family:inherit;transition:transform .1s,box-shadow .1s;}
-.fab:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink);}
+.fab{position:fixed;bottom:calc(var(--nav)+14px);right:18px;width:52px;height:52px;border-radius:50%;border:var(--bd);cursor:pointer;box-shadow:3px 3px 0 var(--shadow-c);display:flex;align-items:center;justify-content:center;z-index:90;font-family:inherit;transition:transform .1s,box-shadow .1s;}
+.fab:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow-c);}
 .fab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.5;}
-.fy{background:var(--yellow);color:var(--ink);}
+.fy{background:var(--yellow);color:var(--ink-on-accent);}
 /* page-level fab visibility */
 /* FAB visibility controlled by JS navigateTo() */
 
 /* MEMORY BANNER */
-.mbanner{margin:10px 16px;background:var(--white);border-radius:var(--rl);padding:18px;border:var(--bd);box-shadow:4px 4px 0 var(--ink);cursor:pointer;position:relative;overflow:hidden;}
+.mbanner{margin:10px 16px;background:var(--white);border-radius:var(--rl);padding:18px;border:var(--bd);box-shadow:4px 4px 0 var(--shadow-c);cursor:pointer;position:relative;overflow:hidden;}
 .mbanner::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(1,61,90,.045) 1px,transparent 1px);background-size:13px 13px;pointer-events:none;}
 .meye{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px;}
 .mtt{font-size:17px;font-weight:900;margin-bottom:3px;}
 .ms{font-size:12px;color:var(--ink2);margin-bottom:9px;}
 .mcs{display:flex;gap:5px;flex-wrap:wrap;}
-.mc{background:var(--yellow);border:1.5px solid var(--ink);border-radius:99px;padding:3px 9px;font-size:11px;font-weight:700;color:var(--ink);}
+.mc{background:var(--yellow);border:1.5px solid var(--ink-on-accent);border-radius:99px;padding:3px 9px;font-size:11px;font-weight:700;color:var(--ink-on-accent);}
 
 /* STATS */
 .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;}
-.sbl{border-radius:var(--rl);border:var(--bd);padding:13px;display:flex;flex-direction:column;gap:4px;box-shadow:3px 3px 0 var(--ink);}
+.sbl{border-radius:var(--rl);border:var(--bd);padding:13px;display:flex;flex-direction:column;gap:4px;box-shadow:3px 3px 0 var(--shadow-c);}
 .sbl.sy{background:var(--yellow);}
 .sbl.sb{background:var(--blue);}
 .sbl.so{background:var(--coral);}
 .sbl.sm{background:var(--mint);}
-.sic{width:28px;height:28px;border-radius:7px;border:2px solid var(--ink);background:rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;margin-bottom:2px;}
-.sic svg{width:14px;height:14px;stroke:var(--ink);fill:none;stroke-width:2;}
-.sn{font-size:26px;font-weight:900;letter-spacing:-1px;line-height:1;color:#013D5A;}
-.sl{font-size:10px;font-weight:700;color:#013D5A;margin-top:2px;}
+.sic{width:28px;height:28px;border-radius:7px;border:2px solid var(--ink-on-accent);background:rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;margin-bottom:2px;}
+.sic svg{width:14px;height:14px;stroke:var(--ink-on-accent);fill:none;stroke-width:2;}
+.sn{font-size:26px;font-weight:900;letter-spacing:-1px;line-height:1;color:var(--ink-on-accent);}
+.sl{font-size:10px;font-weight:700;color:var(--ink-on-accent);margin-top:2px;}
 
 /* SEC HDR */
 .shdr{display:flex;align-items:center;justify-content:space-between;margin:13px 0 8px;}
@@ -99,7 +129,7 @@ svg{display:block;}
 
 /* TRIP CARD — color themes */
 .tc{background:var(--white);border:1.5px solid var(--ink);border-radius:var(--rl);margin-bottom:10px;box-shadow:3px 3px 0 rgba(1,61,90,.55);cursor:pointer;overflow:hidden;transition:transform .1s,box-shadow .1s;}
-.tc:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink);}
+.tc:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--shadow-c);}
 .trip-bar{height:7px;border-bottom:var(--bd);}
 .trip-bar.ty{background:var(--yellow);}
 .trip-bar.tb{background:var(--blue);}
@@ -152,24 +182,36 @@ svg{display:block;}
 .pilltabs{display:flex;gap:6px;padding:14px 16px 0;}
 .pilltab{display:flex;align-items:center;gap:5px;padding:9px 14px;border-radius:99px;font-size:12px;font-weight:800;cursor:pointer;border:1.5px solid rgba(1,61,90,.15);background:rgba(255,255,255,.5);color:var(--ink3);font-family:inherit;}
 .pilltab svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;}
-.pilltab.on{background:var(--ink);border-color:var(--ink);color:var(--cream);}
+.pilltab.on{background:var(--ink-on-accent);border-color:var(--ink-on-accent);color:#FCF3E3;}
 .pilltabs-spacer{height:18px;}
 
 /* OUTING — 清單日期卡（hero，常駐顯示） */
-.ohero{position:relative;padding:16px 16px 14px;overflow:hidden;background:var(--ink);border-radius:0 0 var(--rxl) var(--rxl);margin-bottom:14px;}
+.ohero{position:relative;padding:16px 16px 14px;overflow:hidden;background:var(--ink-on-accent);border-radius:0 0 var(--rxl) var(--rxl);margin-bottom:14px;}
 .ohero-bgnum{position:absolute;right:-8px;top:-22px;font-size:110px;font-weight:900;color:rgba(255,255,255,.06);line-height:1;font-family:'Courier New',monospace;pointer-events:none;}
 .ohero-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;position:relative;z-index:1;}
-.ohero-top .m{font-size:16px;font-weight:900;color:var(--cream);}
+.ohero-top .m{font-size:16px;font-weight:900;color:#FCF3E3;}
+.ohero-mbtn{background:none;border:none;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:5px;padding:4px 8px;border-radius:99px;transition:background .15s;}
+.ohero-mbtn:active{background:rgba(255,255,255,.12);}
+.ohero-mbtn::after{content:'';width:7px;height:7px;border-right:2px solid rgba(252,243,227,.55);border-bottom:2px solid rgba(252,243,227,.55);transform:rotate(45deg);margin-top:-3px;}
 .ohero-nav{width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(252,243,227,.4);background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
-.ohero-nav svg{width:11px;height:11px;stroke:var(--cream);fill:none;stroke-width:2.5;}
+.ohero-nav svg{width:11px;height:11px;stroke:#FCF3E3;fill:none;stroke-width:2.5;}
 .ohero-chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;position:relative;z-index:1;}
 .ohero-chips::-webkit-scrollbar{display:none;}
 .ohero-chip{flex-shrink:0;background:rgba(255,255,255,.1);border:1.5px solid rgba(252,243,227,.25);border-radius:var(--r);padding:8px 10px;min-width:50px;text-align:center;cursor:pointer;}
-.ohero-chip .dn{font-size:16px;font-weight:900;color:var(--cream);font-family:'Courier New',monospace;}
+.ohero-chip .dn{font-size:16px;font-weight:900;color:#FCF3E3;font-family:'Courier New',monospace;}
 .ohero-chip .wd{font-size:8px;font-weight:700;color:rgba(252,243,227,.6);margin-top:1px;letter-spacing:.06em;}
 .ohero-chip.sel{background:var(--yellow);border-color:var(--yellow);}
-.ohero-chip.sel .dn,.ohero-chip.sel .wd{color:var(--ink);}
+.ohero-chip.sel .dn,.ohero-chip.sel .wd{color:var(--ink-on-accent);}
 .ohero-empty{color:rgba(252,243,227,.5);font-size:12px;padding:8px 0;position:relative;z-index:1;}
+
+/* 日常踩點：年月快速選擇 */
+.ompk-yrow{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:14px;}
+.ompk-year{font-size:18px;font-weight:900;color:var(--ink);font-family:'Courier New',Courier,monospace;min-width:64px;text-align:center;}
+.ompk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px;}
+.ompk-m{padding:13px 4px;border-radius:var(--r);border:1.5px solid rgba(1,61,90,.18);background:var(--bg);font-size:13px;font-weight:800;color:var(--ink);cursor:pointer;font-family:inherit;text-align:center;transition:transform .1s;}
+.ompk-m:active{transform:scale(.96);}
+.ompk-m.has{border-color:var(--ink);background:var(--white);box-shadow:2px 2px 0 rgba(1,61,90,.35);}
+.ompk-m.cur{background:var(--yellow);border-color:var(--ink-on-accent);box-shadow:2px 2px 0 var(--ink-on-accent);}
 
 /* OUTING — 展開/收合票根月曆 */
 .ocal-toggle{display:flex;align-items:center;gap:6px;width:100%;text-align:left;font-size:11px;font-weight:800;color:var(--ink3);cursor:pointer;padding:9px 10px;border-radius:var(--r);background:none;border:1.5px dashed var(--ink3);font-family:inherit;margin-bottom:10px;}
@@ -178,21 +220,21 @@ svg{display:block;}
 .ocal-panel{display:none;margin-bottom:14px;}
 .ocal-panel.show{display:block;}
 .ocal-wrap{background:var(--white);border:1.5px solid var(--ink);border-radius:var(--rl);box-shadow:3px 3px 0 rgba(1,61,90,.45);overflow:hidden;}
-.ocal-gridwrap{background:var(--white);padding:12px 12px 14px;}
-.ocal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px;}
-.ocal-weekdays span{text-align:center;font-size:9px;font-weight:800;color:rgba(1,61,90,.35);}
-.ocal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
-.ocal-cell{aspect-ratio:1;max-height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.ocal-gridwrap{background:var(--white);padding:12px 10px 14px;}
+.ocal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:2px;}
+.ocal-weekdays span{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:var(--ink3);}
+.ocal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:38px;row-gap:0;column-gap:0;}
+.ocal-cell{display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .ocal-cell.empty{cursor:default;}
-.ocal-cell .ocal-num{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;font-weight:700;color:var(--ink);font-family:'Courier New',monospace;}
+.ocal-cell .ocal-num{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;font-weight:700;color:var(--ink);font-family:'Courier New',monospace;}
 .ocal-cell.has-record .ocal-num{background:var(--yellow);font-weight:900;}
-.ocal-cell.today:not(.sel) .ocal-num{box-shadow:inset 0 0 0 1.5px rgba(1,61,90,.35);color:rgba(1,61,90,.7);font-weight:900;}
-.ocal-cell.sel .ocal-num{background:var(--ink);color:var(--cream);}
+.ocal-cell.today:not(.sel) .ocal-num{box-shadow:inset 0 0 0 1.5px var(--ink3);color:var(--ink);font-weight:900;}
+.ocal-cell.sel .ocal-num{background:var(--ink-on-accent);color:#FCF3E3;}
 
 /* OUTING — 列表卡片：深色日期標籤 */
 .ocard{background:var(--white);border:1.5px solid rgba(1,61,90,.15);border-radius:var(--rl);margin-bottom:10px;display:flex;align-items:stretch;cursor:pointer;overflow:hidden;transition:border-color .15s,transform .1s;}
 .ocard:active{transform:scale(.99);}
-.ocard-date{background:var(--ink);color:var(--cream);min-width:58px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;}
+.ocard-date{background:var(--ink-on-accent);color:#FCF3E3;min-width:58px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;}
 .ocard-date .mon{font-size:9px;font-weight:800;letter-spacing:.12em;opacity:.6;font-family:'Courier New',monospace;}
 .ocard-date .num{font-size:26px;font-weight:900;line-height:1.1;margin:3px 0;font-family:'Courier New',monospace;letter-spacing:-.02em;}
 .ocard-date .wd{font-size:9px;font-weight:800;letter-spacing:.12em;opacity:.75;font-family:'Courier New',monospace;}
@@ -205,35 +247,36 @@ svg{display:block;}
 /* OUTING — Step①②按鈕 */
 .steprow{display:flex;gap:8px;margin:14px 0;}
 .stepbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:900;padding:11px 12px;cursor:pointer;font-family:inherit;border-radius:8px;border:2px solid var(--ink);background:var(--white);color:var(--ink);white-space:nowrap;}
-.stepbtn.primary{background:var(--ink);border-color:var(--ink);color:var(--cream);box-shadow:3px 3px 0 rgba(1,61,90,.3);}
-.stepbtn.disabled{background:var(--white);border-color:rgba(1,61,90,.15);color:rgba(1,61,90,.3);cursor:not-allowed;box-shadow:none;}
+.stepbtn.primary{background:var(--ink-on-accent);border-color:var(--ink-on-accent);color:#FCF3E3;box-shadow:3px 3px 0 rgba(1,61,90,.3);}
+:root[data-theme="dark"] .stepbtn.primary{background:var(--yellow);border-color:var(--ink-on-accent);color:var(--ink-on-accent);}
+.stepbtn.disabled{background:var(--white);border-color:rgba(128,128,128,.25);color:var(--ink3);cursor:not-allowed;box-shadow:none;}
 
 /* OUTING — 合併版內容卡 */
 .finalcard{background:var(--celeste);border-radius:var(--rl);padding:14px 16px;margin-bottom:14px;}
 .finalcard .toprow{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;}
 .finalcard .nm{font-size:18px;font-weight:900;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .finalcard .actions{display:flex;gap:5px;flex-shrink:0;}
-.finalcard .memo{font-size:13px;color:rgba(1,61,90,.75);margin-bottom:10px;line-height:1.4;}
+.finalcard .memo{font-size:13px;color:var(--ink2);margin-bottom:10px;line-height:1.4;}
 .finalcard .hr{border-top:1.5px dashed rgba(1,61,90,.22);margin-bottom:9px;}
 .finalcard .bottomrow{display:flex;justify-content:space-between;align-items:center;gap:10px;}
-.finalcard .comp{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:rgba(1,61,90,.75);min-width:0;flex:1;}
+.finalcard .comp{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--ink2);min-width:0;flex:1;}
 .finalcard .comp svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
 .finalcard .comp span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.finalcard .weather{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:rgba(1,61,90,.75);flex-shrink:0;white-space:nowrap;}
+.finalcard .weather{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--ink2);flex-shrink:0;white-space:nowrap;}
 .finalcard .weather svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
-.outing-empty-state{text-align:center;padding:30px 16px;color:rgba(1,61,90,.35);font-size:12px;}
-.outing-empty-state .et{font-weight:800;margin-bottom:4px;color:rgba(1,61,90,.5);}
+.outing-empty-state{text-align:center;padding:30px 16px;color:var(--ink3);font-size:12px;}
+.outing-empty-state .et{font-weight:800;margin-bottom:4px;color:var(--ink3);}
 
 /* DAY LIST */
 .dlist{padding:12px 16px;display:flex;flex-direction:column;gap:0;}
 #day-list-container{display:flex;flex-direction:column;width:100%;}
 .drow{display:flex;gap:9px;margin-bottom:9px;width:100%;box-sizing:border-box;}
 .dnc{display:flex;flex-direction:column;align-items:center;min-width:34px;}
-.dnum{width:33px;height:33px;border-radius:50%;background:var(--yellow);border:var(--bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;box-shadow:2px 2px 0 var(--ink);}
+.dnum{width:33px;height:33px;border-radius:50%;background:var(--yellow);border:2px solid var(--ink-on-accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;box-shadow:2px 2px 0 var(--ink-on-accent);color:var(--ink-on-accent);}
 .dnum.dt{background:var(--orange);color:#fff;}
 .dline{width:2px;flex:1;min-height:10px;background:var(--ink);margin-top:2px;}
 .dcard{flex:1;background:var(--white);border:1.5px solid var(--ink);border-radius:var(--rl);padding:9px 11px;box-shadow:2px 2px 0 rgba(1,61,90,.5);}
-.dcard.today{background:#FFF8E8;border-color:var(--orange);}
+.dcard.today{background:#FFF8E8;border-color:var(--orange);color:var(--ink-on-accent);}
 .ddate{font-size:10px;color:var(--ink3);font-weight:700;margin-bottom:2px;}
 .dtbadge{font-size:10px;font-weight:800;color:var(--orange);}
 .dtheme{font-size:12px;font-weight:800;margin-bottom:4px;}
@@ -245,13 +288,13 @@ svg{display:block;}
 .tle{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;}
 .tlt{min-width:38px;text-align:right;padding-top:8px;font-size:10px;font-weight:800;color:var(--ink3);}
 .tldc{display:flex;flex-direction:column;align-items:center;padding-top:6px;}
-.tld{width:12px;height:12px;border-radius:50%;border:2px solid var(--ink);background:var(--yellow);flex-shrink:0;}
+.tld{width:12px;height:12px;border-radius:50%;border:2px solid var(--ink-on-accent);background:var(--yellow);flex-shrink:0;}
 .tld.cr{background:var(--orange);}
 .tld.mn{background:var(--mint);}
 .tld.sk{background:var(--blue);}
 .tld.lv{background:var(--lav);}
 .tlc{width:2px;flex:1;min-height:12px;background:var(--ink);margin-top:2px;}
-.evc{flex:1;background:var(--white);border:var(--bd);border-radius:var(--r);padding:9px 11px;cursor:pointer;position:relative;box-shadow:2px 2px 0 var(--ink);}
+.evc{flex:1;background:var(--white);border:var(--bd);border-radius:var(--r);padding:9px 11px;cursor:pointer;position:relative;box-shadow:2px 2px 0 var(--shadow-c);}
 .evtr{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;}
 .evtype{font-size:10px;font-weight:800;text-transform:uppercase;padding:2px 7px;border-radius:99px;border:1.5px solid var(--ink);}
 .evrt{font-size:11px;font-weight:800;display:flex;align-items:center;gap:2px;}
@@ -262,28 +305,29 @@ svg{display:block;}
 .evpl svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2;}
 .evacts{position:absolute;top:7px;right:7px;gap:3px;display:none;}
 .evc:hover .evacts{display:flex;}
-.evab{width:24px;height:24px;border-radius:6px;border:1.5px solid var(--ink);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.evab:hover{background:var(--yellow);}
+.evab{width:24px;height:24px;border-radius:6px;border:1.5px solid var(--ink);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink);}
+.evab:hover{background:var(--yellow);color:var(--ink-on-accent);}
 .evab svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;}
+.evab.dl{background:#FFE0CC;border-color:var(--ink-on-accent);color:var(--ink-on-accent);}
 
 /* EXPENSE */
 .expi{display:flex;align-items:center;padding:9px 0;border-bottom:1.5px solid var(--ink);}
 .expi:last-child{border-bottom:none;}
-.expic{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:var(--bd);margin-right:9px;}
+.expic{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:var(--bd);margin-right:9px;color:var(--ink-on-accent);}
 .expic svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;}
 
 /* AI */
-.aic{background:var(--yellow);border:var(--bd);border-radius:var(--rl);padding:14px;margin-bottom:11px;box-shadow:3px 3px 0 var(--ink);}
+.aic{background:var(--yellow);border:2px solid var(--ink-on-accent);border-radius:var(--rl);padding:14px;margin-bottom:11px;box-shadow:3px 3px 0 var(--ink-on-accent);}
 .aic::before{content:'';display:block;width:100%;height:100%;position:absolute;inset:0;background-image:radial-gradient(circle,rgba(1,61,90,.04) 1px,transparent 1px);background-size:11px 11px;border-radius:var(--rl);pointer-events:none;}
-.aibdg{background:var(--ink);color:var(--yellow);font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:7px;}
+.aibdg{background:var(--ink-on-accent);color:var(--yellow);font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:7px;}
 .aitxt{font-size:12px;line-height:1.7;color:var(--ink);}
 .aiac{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
-.abtn{padding:6px 14px;border-radius:8px;border:var(--bd);background:var(--white);color:var(--ink);font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:2px 2px 0 var(--ink);}
-.abtn.ap{background:var(--ink);color:var(--yellow);}
+.abtn{padding:6px 14px;border-radius:8px;border:var(--bd);background:var(--white);color:var(--ink);font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:2px 2px 0 var(--shadow-c);}
+.abtn.ap{background:var(--ink-on-accent);color:var(--yellow);}
 
 /* RANKING */
-.rkc{background:var(--white);border:var(--bd);border-radius:var(--rl);overflow:hidden;margin-bottom:11px;box-shadow:3px 3px 0 var(--ink);}
-.rkh{padding:9px 13px;background:var(--yellow);border-bottom:var(--bd);display:flex;align-items:center;justify-content:space-between;}
+.rkc{background:var(--white);border:var(--bd);border-radius:var(--rl);overflow:hidden;margin-bottom:11px;box-shadow:3px 3px 0 var(--shadow-c);}
+.rkh{padding:9px 13px;background:var(--yellow);border-bottom:var(--bd);display:flex;align-items:center;justify-content:space-between;color:var(--ink-on-accent);}
 .rkh.eats{background:var(--lav);}
 .rkr{display:flex;align-items:center;gap:9px;padding:9px 13px;border-bottom:1px solid rgba(1,61,90,.1);}
 .rkr:last-child{border-bottom:none;}
@@ -296,8 +340,8 @@ svg{display:block;}
 .rsco{font-size:15px;font-weight:900;color:var(--orange);}
 
 /* COMPANION */
-.csc{background:var(--white);border:var(--bd);border-radius:var(--rl);padding:11px 13px;display:flex;align-items:center;gap:10px;margin-bottom:9px;box-shadow:2px 2px 0 var(--ink);}
-.csav{width:40px;height:40px;border-radius:50%;border:var(--bd);background:var(--yellow);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.csc{background:var(--white);border:var(--bd);border-radius:var(--rl);padding:11px 13px;display:flex;align-items:center;gap:10px;margin-bottom:9px;box-shadow:2px 2px 0 var(--shadow-c);}
+.csav{width:40px;height:40px;border-radius:50%;border:2px solid var(--ink-on-accent);background:var(--yellow);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .csav svg{width:17px;height:17px;stroke:var(--ink);fill:none;stroke-width:2;}
 .csst{display:flex;gap:8px;margin-top:3px;}
 .csn{font-size:15px;font-weight:900;}
@@ -309,7 +353,7 @@ svg{display:block;}
   border:var(--bd);
   border-radius:var(--rl);
   padding:18px;
-  box-shadow:4px 4px 0 var(--ink);
+  box-shadow:4px 4px 0 var(--shadow-c);
   position:relative;overflow:hidden;
 }
 .hero-full::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(1,61,90,.045) 1px,transparent 1px);background-size:12px 12px;}
@@ -325,12 +369,12 @@ svg{display:block;}
 .swrap{position:relative;margin-bottom:9px;}
 .sip{position:absolute;left:11px;top:50%;transform:translateY(-50%);}
 .sip svg{width:14px;height:14px;stroke:var(--ink3);fill:none;stroke-width:2.5;}
-.sin{width:100%;padding:10px 11px 10px 34px;border:var(--bd);border-radius:var(--rl);font-size:14px;font-family:inherit;background:var(--white);color:var(--ink);outline:none;box-shadow:3px 3px 0 var(--ink);}
-.sin:focus{background:#FCF3E3;}
+.sin{width:100%;padding:10px 11px 10px 34px;border:var(--bd);border-radius:var(--rl);font-size:14px;font-family:inherit;background:var(--white);color:var(--ink);outline:none;box-shadow:3px 3px 0 var(--shadow-c);}
+.sin:focus{background:var(--cream);}
 .frow{display:flex;gap:5px;overflow-x:auto;padding-bottom:9px;scrollbar-width:none;}
 .frow::-webkit-scrollbar{display:none;}
-.fchip{flex-shrink:0;padding:4px 10px;border-radius:6px;border:1.5px solid rgba(1,61,90,.2);background:var(--white);font-size:11px;font-weight:700;cursor:pointer;color:var(--ink);}
-.fchip.on{background:var(--yellow);border-color:rgba(1,61,90,.3);box-shadow:1px 1px 0 rgba(1,61,90,.15);font-weight:800;}
+.fchip{flex-shrink:0;padding:4px 10px;border-radius:6px;border:1.5px solid rgba(128,128,128,.3);background:var(--white);font-size:11px;font-weight:700;cursor:pointer;color:var(--ink);}
+.fchip.on{background:var(--yellow);border-color:var(--ink-on-accent);box-shadow:1px 1px 0 rgba(1,61,90,.15);font-weight:800;color:var(--ink-on-accent);}
 .sri{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1.5px solid var(--ink);cursor:pointer;}
 .sric{width:34px;height:34px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:var(--bd);}
 .sric svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;}
@@ -357,6 +401,7 @@ svg{display:block;}
 .shtl{font-size:15px;font-weight:900;margin-bottom:12px;}
 .shx{position:absolute;top:13px;right:13px;width:27px;height:27px;border-radius:50%;border:var(--bd);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .shx:hover{background:var(--yellow);}
+.shx:hover svg{stroke:var(--ink-on-accent);}
 .shx svg{width:12px;height:12px;stroke:var(--ink);fill:none;stroke-width:2.5;}
 /* FORM */
 .fr{margin-bottom:9px;}
@@ -365,14 +410,14 @@ svg{display:block;}
 .fi[type="date"]{appearance:none;-webkit-appearance:none;-moz-appearance:none;display:block;font-size:13px;padding:9px 11px;min-height:42px;box-sizing:border-box;border:var(--bd);background:var(--white);border-radius:var(--r);color:var(--ink);width:100%;min-width:0;max-width:100%;overflow:hidden;line-height:1.3;}
 .fi[type="time"]{appearance:none;-webkit-appearance:none;-moz-appearance:none;display:block;font-size:13px;padding:9px 11px;min-height:42px;box-sizing:border-box;width:100%;min-width:0;max-width:100%;overflow:hidden;}
 select.fi{appearance:none;-webkit-appearance:none;-moz-appearance:none;padding:9px 30px 9px 11px;min-height:42px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23013D5A' stroke-width='2.5'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 9px center;background-size:14px 14px;}
-.fi:focus{background:#FCF3E3;}
+.fi:focus{background:var(--cream);}
 .f2c{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;min-width:0;}
 .f2c>div{min-width:0;overflow:hidden;} .f2c .fi{min-width:0;}
 .trow{display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;margin-bottom:9px;scrollbar-width:none;}
 .trow::-webkit-scrollbar{display:none;}
 .tbtn{flex-shrink:0;padding:5px 10px;border-radius:99px;border:var(--bd);background:var(--white);font-size:11px;font-weight:800;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:4px;font-family:inherit;}
 .tbtn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;}
-.tbtn.sel{background:var(--yellow);box-shadow:2px 2px 0 var(--ink);}
+.tbtn.sel{background:var(--yellow);box-shadow:2px 2px 0 var(--ink-on-accent);}
 .etog{display:flex;align-items:center;gap:6px;width:100%;text-align:left;font-size:11px;font-weight:800;color:var(--ink3);cursor:pointer;padding:7px 8px;border-radius:var(--r);background:none;border:1.5px dashed var(--ink3);font-family:inherit;margin:6px 0;}
 .etog:hover{background:var(--bg);}
 .etog svg.cv{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;transition:transform .2s;}
@@ -384,8 +429,8 @@ select.fi{appearance:none;-webkit-appearance:none;-moz-appearance:none;padding:9
 .rdot.fi2{background:var(--yellow);}
 .rdot.hi{background:var(--orange);color:#fff;}
 .ctw{display:flex;flex-wrap:wrap;gap:5px;padding:7px 10px;border:var(--bd);border-radius:var(--r);background:var(--bg);min-height:40px;cursor:text;}
-.ctw:focus-within{background:#FCF3E3;}
-.ctag{display:inline-flex;align-items:center;gap:3px;background:var(--yellow);border:1.5px solid var(--ink);border-radius:99px;padding:3px 8px;font-size:11px;font-weight:800;}
+.ctw:focus-within{background:var(--cream);}
+.ctag{display:inline-flex;align-items:center;gap:3px;background:var(--yellow);border:1.5px solid var(--ink-on-accent);border-radius:99px;padding:3px 8px;font-size:11px;font-weight:800;}
 .ctrm{width:13px;height:13px;border-radius:50%;background:var(--ink);color:var(--yellow);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;font-size:9px;font-weight:900;font-family:inherit;}
 .cin{border:none;outline:none;background:transparent;font-size:12px;color:var(--ink);font-family:inherit;min-width:70px;font-weight:700;}
 .mlink{display:none;align-items:center;gap:4px;font-size:11px;font-weight:800;color:var(--ink);text-decoration:underline;margin-bottom:9px;cursor:pointer;}
@@ -397,78 +442,78 @@ select.fi{appearance:none;-webkit-appearance:none;-moz-appearance:none;padding:9
 .et{font-size:13px;font-weight:800;color:var(--ink2);margin-bottom:4px;}
 .es{font-size:12px;line-height:1.6;}
 /* TOAST */
-.toast{position:fixed;bottom:calc(var(--nav)+80px);left:50%;transform:translateX(-50%) translateY(10px);background:var(--ink);color:#fff;padding:9px 16px;border-radius:99px;font-size:12px;font-weight:700;z-index:999;opacity:0;transition:all .2s;white-space:nowrap;pointer-events:none;border:var(--bd);}
+.toast{position:fixed;bottom:calc(var(--nav)+80px);left:50%;transform:translateX(-50%) translateY(10px);background:var(--ink-on-accent);color:#FCF3E3;padding:9px 16px;border-radius:99px;font-size:12px;font-weight:700;z-index:999;opacity:0;transition:all .2s;white-space:nowrap;pointer-events:none;border:var(--bd);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 
 /* ── TICKET C STYLE ── */
-.c-admit{font-family:'Courier New',Courier,monospace;font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(1,61,90,.4);margin-bottom:4px;}
-.c-ticket{background:#FCF3E3;border:2px solid #013D5A;border-radius:10px;overflow:hidden;box-shadow:3px 3px 0 #013D5A;}
-.c-ticket-head{padding:11px 14px 10px;border-bottom:2px solid #013D5A;background:#F5EBD8;}
+.c-admit{font-family:'Courier New',Courier,monospace;font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px;}
+.c-ticket{background:var(--cream);border:2px solid var(--ink);border-radius:10px;overflow:hidden;box-shadow:3px 3px 0 var(--shadow-c);}
+.c-ticket-head{padding:11px 14px 10px;border-bottom:2px solid var(--ink);background:var(--cream-deep);}
 .c-grid{display:grid;grid-template-columns:1fr 1fr;}
-.c-cell{padding:8px 12px;border-right:1px solid rgba(1,61,90,.25);border-bottom:1px solid rgba(1,61,90,.25);background:#FCF3E3;}
+.c-cell{padding:8px 12px;border-right:1px solid rgba(128,128,128,.25);border-bottom:1px solid rgba(128,128,128,.25);background:var(--cream);}
 .c-cell:nth-child(2n){border-right:none;}
 .c-cell:nth-child(3),.c-cell:nth-child(4){border-bottom:none;}
-.c-cell-label{font-family:'Courier New',Courier,monospace;font-size:7px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(1,61,90,.35);margin-bottom:3px;}
-.c-cell-val{font-size:13px;font-weight:900;color:#013D5A;font-family:'Courier New',Courier,monospace;letter-spacing:-.2px;}
+.c-cell-label{font-family:'Courier New',Courier,monospace;font-size:7px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px;}
+.c-cell-val{font-size:13px;font-weight:900;color:var(--ink);font-family:'Courier New',Courier,monospace;letter-spacing:-.2px;}
 .c-tear{display:flex;align-items:center;}
-.c-tear-hole{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:2px solid #013D5A;}
-.c-tear-line{flex:1;border-top:2px dashed #013D5A;}
-.c-ticket-bot{padding:9px 14px 12px;display:flex;flex-direction:column;gap:7px;background:#FCF3E3;}
+.c-tear-hole{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:2px solid var(--ink);background:var(--bg);}
+.c-tear-line{flex:1;border-top:2px dashed var(--ink);}
+.c-ticket-bot{padding:9px 14px 12px;display:flex;flex-direction:column;gap:7px;background:var(--cream);}
 .c-tag-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(1,61,90,.1);color:var(--ink);border:1px solid rgba(1,61,90,.2);font-family:'Courier New',Courier,monospace;letter-spacing:.04em;display:inline-block;}
-.c-pax{font-family:'Courier New',Courier,monospace;font-size:10px;color:#666;display:flex;align-items:baseline;gap:6px;}
-.c-pax-label{font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;}
-.c-memo-c{font-size:10px;font-weight:700;font-family:'Courier New',Courier,monospace;color:#444;border-left:3px solid #013D5A;padding-left:8px;letter-spacing:.02em;}
+.c-pax{font-family:'Courier New',Courier,monospace;font-size:10px;color:var(--ink3);display:flex;align-items:baseline;gap:6px;}
+.c-pax-label{font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);}
+.c-memo-c{font-size:10px;font-weight:700;font-family:'Courier New',Courier,monospace;color:var(--ink2);border-left:3px solid var(--ink);padding-left:8px;letter-spacing:.02em;}
 .c-barcode{display:flex;align-items:center;justify-content:space-between;padding-top:7px;border-top:1.5px solid rgba(1,61,90,.2);margin-top:2px;}
 .c-bars{display:flex;gap:1px;align-items:center;height:20px;}
-.c-bars span{display:inline-block;width:1.5px;background:#013D5A;opacity:.35;}
-.c-serial{font-family:'Courier New',Courier,monospace;font-size:8px;color:#aaa;letter-spacing:.06em;}
+.c-bars span{display:inline-block;width:1.5px;background:var(--ink);opacity:.35;}
+.c-serial{font-family:'Courier New',Courier,monospace;font-size:8px;color:var(--ink3);letter-spacing:.06em;}
 
 
 .fdrop-wrap{position:relative;display:inline-block;}
 .fdrop-menu{display:none;position:fixed;z-index:9999;
-  background:#fff;border:2px solid #013D5A;border-radius:8px;box-shadow:3px 3px 0 #013D5A;
-  min-width:130px;overflow:hidden;}
+  background:var(--white);border:2px solid var(--ink);box-shadow:3px 3px 0 var(--shadow-c);border-radius:8px;
+  min-width:130px;overflow:hidden;color:var(--ink);}
 .fdrop-menu.open{display:block;}
 .fdrop-item{padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;
   border-bottom:1px solid rgba(1,61,90,.07);}
 .fdrop-item:last-child{border-bottom:none;}
-.fdrop-item:hover{background:var(--yellow);}
-.fdrop-item.on{background:var(--yellow);font-weight:900;}
+.fdrop-item:hover{background:var(--yellow);color:var(--ink-on-accent);}
+.fdrop-item.on{background:var(--yellow);font-weight:900;color:var(--ink-on-accent);}
 
 /* ── PASSPORT ── */
-.pp-card{border:2px solid var(--ink);border-radius:12px;overflow:hidden;box-shadow:3px 3px 0 var(--ink);margin-bottom:14px;}
-.pp-stripe-head{padding:9px 14px;border-bottom:2px solid var(--ink);background:var(--cream,#FCF3E3);background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(1,61,90,.07) 4px,rgba(1,61,90,.07) 5px);display:flex;justify-content:space-between;align-items:center;}
-.pp-body{background:#FCF3E3;background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(1,61,90,.025) 5px,rgba(1,61,90,.025) 6px);}
+.pp-card{border:2px solid var(--ink);border-radius:12px;overflow:hidden;box-shadow:3px 3px 0 var(--shadow-c);margin-bottom:14px;}
+.pp-stripe-head{padding:9px 14px;border-bottom:2px solid var(--ink);background:var(--cream);background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(128,128,128,.1) 4px,rgba(128,128,128,.1) 5px);display:flex;justify-content:space-between;align-items:center;}
+.pp-body{background:var(--cream);background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(128,128,128,.04) 5px,rgba(128,128,128,.04) 6px);}
 .pp-holder{padding:12px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(1,61,90,.1);}
-.pp-avatar{width:56px;height:56px;border-radius:8px;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:2px 2px 0 var(--ink);background:var(--yellow);transition:background .15s;}
+.pp-avatar{width:56px;height:56px;border-radius:8px;border:2px solid var(--ink-on-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:2px 2px 0 var(--shadow-c);background:var(--yellow);transition:background .15s;}
 .pp-avatar svg{stroke:var(--ink);fill:none;stroke-width:1.8;width:28px;height:28px;}
-.pp-info-label{font-size:7px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(1,61,90,.6);font-family:'Courier New',Courier,monospace;margin-bottom:2px;}
+.pp-info-label{font-size:7px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);font-family:'Courier New',Courier,monospace;margin-bottom:2px;}
 .pp-name{font-size:17px;font-weight:900;color:var(--ink);}
-.pp-slogan{font-size:11px;color:#444;font-style:italic;margin-top:2px;}
+.pp-slogan{font-size:11px;color:var(--ink2);font-style:italic;margin-top:2px;}
 .pp-stats{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid rgba(1,61,90,.1);}
 .pp-sc{padding:8px 10px;text-align:center;}
 .pp-sc+.pp-sc{border-left:1px solid rgba(1,61,90,.1);}
-.pp-sc-l{font-size:7px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#555;font-family:'Courier New',Courier,monospace;}
+.pp-sc-l{font-size:7px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);font-family:'Courier New',Courier,monospace;}
 .pp-sc-n{font-size:20px;font-weight:900;font-family:'Courier New',Courier,monospace;color:var(--ink);line-height:1.2;}
 .pp-foot{padding:8px 14px;border-top:1.5px dashed rgba(1,61,90,.18);display:flex;justify-content:space-between;align-items:center;}
-.pp-mrz{font-size:7px;color:#666;font-family:'Courier New',Courier,monospace;line-height:1.7;}
+.pp-mrz{font-size:7px;color:var(--ink3);font-family:'Courier New',Courier,monospace;line-height:1.7;}
 .pp-barcode{display:flex;align-items:center;gap:1.5px;}
 .pp-barcode span{display:inline-block;width:1.5px;background:var(--ink);opacity:.4;}
 /* icon selector */
 .icon-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px;}
-.icon-opt{aspect-ratio:1;border-radius:8px;border:1.5px solid rgba(1,61,90,.15);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.icon-opt svg{stroke:#555;fill:none;stroke-width:1.8;width:22px;height:22px;}
-.icon-opt.sel{border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);}
+.icon-opt{aspect-ratio:1;border-radius:8px;border:1.5px solid rgba(128,128,128,.25);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink);}
+.icon-opt svg{stroke:var(--ink3);fill:none;stroke-width:1.8;width:22px;height:22px;}
+.icon-opt.sel{border:2px solid var(--ink);box-shadow:2px 2px 0 var(--shadow-c);}
 .icon-opt.sel svg{stroke:var(--ink);}
 .col-opts{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
 .col-opt{width:36px;height:36px;border-radius:8px;border:1.5px solid rgba(1,61,90,.15);cursor:pointer;}
-.col-opt.sel{border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);}
+.col-opt.sel{border:2px solid var(--ink);box-shadow:2px 2px 0 var(--shadow-c);}
 /* home badge */
-.pp-badge{border:2px solid var(--ink);border-radius:10px;overflow:hidden;box-shadow:2px 2px 0 var(--ink);width:76px;flex-shrink:0;}
-.pp-badge-top{padding:5px 8px;border-bottom:1.5px solid var(--ink);background:#FCF3E3;background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(1,61,90,.07) 4px,rgba(1,61,90,.07) 5px);}
-.pp-badge-body{background:#FCF3E3;padding:7px 8px;text-align:center;}
-.pp-badge-av{width:36px;height:36px;border-radius:6px;border:2px solid var(--ink);background:var(--yellow);display:flex;align-items:center;justify-content:center;margin:0 auto 4px;box-shadow:1px 1px 0 var(--ink);}
+.pp-badge{border:2px solid var(--ink);border-radius:10px;overflow:hidden;box-shadow:2px 2px 0 var(--shadow-c);width:76px;flex-shrink:0;}
+.pp-badge-top{padding:5px 8px;border-bottom:1.5px solid var(--ink);background:var(--cream);background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(128,128,128,.1) 4px,rgba(128,128,128,.1) 5px);}
+.pp-badge-body{background:var(--cream);padding:7px 8px;text-align:center;}
+.pp-badge-av{width:36px;height:36px;border-radius:6px;border:2px solid var(--ink-on-accent);background:var(--yellow);display:flex;align-items:center;justify-content:center;margin:0 auto 4px;box-shadow:1px 1px 0 var(--shadow-c);}
 .pp-badge-av svg{stroke:var(--ink);fill:none;stroke-width:2;width:18px;height:18px;}
 
 .tinp-row{display:flex;align-items:center;gap:6px;}
@@ -483,21 +528,21 @@ select.fi{appearance:none;-webkit-appearance:none;-moz-appearance:none;padding:9
 .twp-trigger.empty{color:var(--ink3);font-weight:600;}
 .twp-overlay{display:none;position:fixed;inset:0;background:rgba(1,61,90,.5);z-index:300;align-items:center;justify-content:center;padding:20px;}
 .twp-overlay.open{display:flex;}
-.twp-sheet{width:100%;max-width:380px;background:#fff;border-radius:18px;border:2px solid #013D5A;box-shadow:5px 5px 0 #013D5A;overflow:hidden;display:flex;flex-direction:column;max-height:90vh;}
-.twp-head{padding:16px 16px 14px;background:#FCF3E3;background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(1,61,90,.04) 5px,rgba(1,61,90,.04) 6px);border-bottom:2px solid #013D5A;font-size:15px;font-weight:900;text-align:center;flex-shrink:0;}
+.twp-sheet{width:100%;max-width:380px;background:var(--white);border-radius:18px;border:2px solid var(--ink);box-shadow:5px 5px 0 var(--shadow-c);overflow:hidden;display:flex;flex-direction:column;max-height:90vh;}
+.twp-head{padding:16px 16px 14px;background:var(--cream-deep);background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(128,128,128,.06) 5px,rgba(128,128,128,.06) 6px);border-bottom:2px solid var(--ink);font-size:15px;font-weight:900;text-align:center;flex-shrink:0;color:var(--ink);}
 .twp-area{position:relative;height:260px;display:flex;justify-content:center;align-items:center;flex-shrink:0;padding:0 10px;}
 .twp-col{position:relative;width:100px;height:260px;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;}
 .twp-col::-webkit-scrollbar{display:none;}
 .twp-pad{height:110px;}
 .twp-item{height:40px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;font-family:'Courier New',Courier,monospace;color:#bbb;scroll-snap-align:center;}
 .twp-item.extended{color:#FFB89A;}
-.twp-center-line{position:absolute;top:110px;left:5%;right:5%;height:40px;border-top:2.5px solid #013D5A;border-bottom:2.5px solid #013D5A;background:rgba(255,216,77,.18);pointer-events:none;border-radius:6px;}
-.twp-colon{font-size:26px;font-weight:900;color:#013D5A;padding:0 6px;flex-shrink:0;}
-.twp-foot{padding:14px 16px;border-top:2px solid #013D5A;display:flex;flex-direction:column;gap:10px;flex-shrink:0;background:#fff;}
+.twp-center-line{position:absolute;top:110px;left:5%;right:5%;height:40px;border-top:2.5px solid var(--ink);border-bottom:2.5px solid var(--ink);background:rgba(255,216,77,.18);pointer-events:none;border-radius:6px;}
+.twp-colon{font-size:26px;font-weight:900;color:var(--ink);padding:0 6px;flex-shrink:0;}
+.twp-foot{padding:14px 16px;border-top:2px solid var(--ink);display:flex;flex-direction:column;gap:10px;flex-shrink:0;background:var(--white);}
 .twp-foot-row{display:flex;justify-content:space-between;align-items:center;}
-.twp-confirm{width:100%;background:#013D5A;color:var(--yellow);border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;}
-.twp-clear{background:none;border:1.5px solid rgba(1,61,90,.2);border-radius:8px;padding:6px 14px;font-size:12px;color:#555;font-weight:700;cursor:pointer;}
-.twp-hint{font-size:11px;color:#888;}
+.twp-confirm{width:100%;background:var(--ink-on-accent);color:var(--yellow);border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;}
+.twp-clear{background:none;border:1.5px solid rgba(128,128,128,.3);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--ink3);font-weight:700;cursor:pointer;}
+.twp-hint{font-size:11px;color:var(--ink3);}
 </style>
 <script>
 
@@ -879,6 +924,7 @@ function deleteDayFromList(dayId){
 }
 (function(){
   try {
+    initTheme();
     buildRating();
     renderHome();
     document.addEventListener('click',function(e){if(!e.target.closest('.fdrop-wrap'))closeDrops();});
@@ -975,7 +1021,7 @@ function renderCurrencyListSettings(){
   if(!el)return;
   const list=getCurrencies();
   el.innerHTML=list.map(c=>`
-    <div class="setr"><div class="setl"><div class="setic" style="background:var(--bg);"><span style="font-size:13px;font-weight:900;color:#013D5A;">${c.sym}</span></div><div><div class="setlb">${c.code}</div></div></div><div style="display:flex;gap:4px;"><button onclick="openEditCurrency('${c.code}')" style="border:none;background:none;cursor:pointer;padding:6px;display:flex;"><svg width="15" height="15" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg></button><button onclick="deleteCurrency('${c.code}')" style="border:none;background:none;cursor:pointer;padding:6px;display:flex;"><svg width="15" height="15" viewBox="0 0 24 24" stroke="#e05500" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></div>
+    <div class="setr"><div class="setl"><div class="setic" style="background:var(--bg);"><span style="font-size:13px;font-weight:900;color:var(--ink);">${c.sym}</span></div><div><div class="setlb">${c.code}</div></div></div><div style="display:flex;gap:4px;"><button onclick="openEditCurrency('${c.code}')" style="border:none;background:none;cursor:pointer;padding:6px;display:flex;"><svg width="15" height="15" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg></button><button onclick="deleteCurrency('${c.code}')" style="border:none;background:none;cursor:pointer;padding:6px;display:flex;"><svg width="15" height="15" viewBox="0 0 24 24" stroke="#e05500" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></div>
   `).join('');
 }
 let editingCurrencyCode=null;
@@ -1018,6 +1064,25 @@ function saveNewCurrency(){
   closeSh('add-currency-ov');
   renderCurrencyListSettings();
   showToast('✓ 幣別已新增');
+}
+
+// ── DARK MODE（第一階段：CSS 變數機制） ──
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  const tog=document.getElementById('dark-mode-toggle');
+  if(tog)tog.classList.toggle('on',theme==='dark');
+}
+function toggleDarkMode(){
+  const cur=document.documentElement.getAttribute('data-theme')||'light';
+  const next=cur==='dark'?'light':'dark';
+  try{localStorage.setItem('ptk_theme',next);}catch(e){console.error('theme save error',e);}
+  applyTheme(next);
+  showToast(next==='dark'?'✓ 已切換為深色模式':'✓ 已切換為淺色模式');
+}
+function initTheme(){
+  let theme='light';
+  try{theme=localStorage.getItem('ptk_theme')||'light';}catch(e){}
+  applyTheme(theme);
 }
 
 // ── DB helpers ──
@@ -1185,7 +1250,7 @@ function tripCardHTML(trip, onclick=''){
   const currLines=Object.keys(currTotals).map(c=>(CURRENCY_SYM[c]||c)+' '+currTotals[c].toLocaleString());
 
   // 標籤
-  const tagHtml=splitTags(trip.tags).map(t=>`<span style="font-size:13px;font-weight:700;padding:3px 8px;border-radius:99px;background:rgba(1,61,90,.07);color:#444;border:1px solid rgba(1,61,90,.12);">${t}</span>`).join('');
+  const tagHtml=splitTags(trip.tags).map(t=>`<span style="font-size:13px;font-weight:700;padding:3px 8px;border-radius:99px;background:rgba(128,128,128,.13);color:var(--ink2);border:1px solid rgba(128,128,128,.22);">${t}</span>`).join('');
 
   const bgMap={ty:'#F5C857',tb:'#7FB5D6',tm:'#708C69',tp:'#E8B4B8',tc:'#BDD3CE',td:'#4D7FA8'};
   const barBg=bgMap[color]||'#F5C857';
@@ -1199,23 +1264,23 @@ function tripCardHTML(trip, onclick=''){
     <div style="height:6px;background:${barBg};"></div>
     <div style="display:flex;">
       <!-- 左側：日期區塊（票券感） -->
-      <div style="background:#FCF3E3;padding:10px 9px;text-align:center;border-right:1.5px dashed rgba(1,61,90,.2);min-width:56px;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;">
-        <div style="font-size:12px;font-weight:700;color:rgba(1,61,90,.7);font-family:'Courier New',Courier,monospace;line-height:1.35;">${shortStart}</div>
-        <div style="font-size:9px;color:rgba(1,61,90,.3);margin:1px 0;">–</div>
-        <div style="font-size:12px;font-weight:700;color:rgba(1,61,90,.7);font-family:'Courier New',Courier,monospace;line-height:1.35;">${shortEnd}</div>
+      <div style="background:var(--cream);padding:10px 9px;text-align:center;border-right:1.5px dashed rgba(128,128,128,.3);min-width:56px;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;">
+        <div style="font-size:12px;font-weight:700;color:var(--ink2);font-family:'Courier New',Courier,monospace;line-height:1.35;">${shortStart}</div>
+        <div style="font-size:9px;color:var(--ink3);margin:1px 0;">–</div>
+        <div style="font-size:12px;font-weight:700;color:var(--ink2);font-family:'Courier New',Courier,monospace;line-height:1.35;">${shortEnd}</div>
       </div>
       <!-- 右側：標題 + 標籤 + 金額 -->
       <div style="flex:1;padding:10px 12px;min-width:0;">
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:6px;">
-          <div style="font-size:16px;font-weight:900;color:#013D5A;letter-spacing:-.3px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${trip.name||'未命名旅行'}</div>
-          <span style="font-size:10px;font-weight:700;color:rgba(1,61,90,.45);flex-shrink:0;">${days}天</span>
+          <div style="font-size:16px;font-weight:900;color:var(--ink);letter-spacing:-.3px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${trip.name||'未命名旅行'}</div>
+          <span style="font-size:10px;font-weight:700;color:var(--ink3);flex-shrink:0;">${days}天</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
           <div style="display:flex;flex-wrap:wrap;gap:4px;min-width:0;flex:1;">${tagHtml||''}</div>
           ${currLines.length?`<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;">
             ${currLines.map(line=>`<div style="display:flex;align-items:center;gap:3px;">
-              <svg width="11" height="11" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              <span style="font-size:13px;font-weight:900;color:#013D5A;white-space:nowrap;">${line}</span>
+              <svg width="11" height="11" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <span style="font-size:13px;font-weight:900;color:var(--ink);white-space:nowrap;">${line}</span>
             </div>`).join('')}
           </div>`:''}
         </div>
@@ -1239,7 +1304,7 @@ const ICON_COMP_SVG='<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5
 const ICON_PIN_SVG='<svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
 
 function outingCardHTML(outing,onclick=''){
-  const tagHtml=splitTags(outing.tags).map(t=>`<span style="font-size:12px;font-weight:700;padding:3px 8px;border-radius:99px;background:rgba(1,61,90,.07);color:#444;border:1px solid rgba(1,61,90,.12);">${t}</span>`).join('');
+  const tagHtml=splitTags(outing.tags).map(t=>`<span style="font-size:12px;font-weight:700;padding:3px 8px;border-radius:99px;background:rgba(128,128,128,.13);color:var(--ink2);border:1px solid rgba(128,128,128,.22);">${t}</span>`).join('');
   const compStr=(outing.companions||[]).join('、');
   const d=outing.date?new Date(outing.date):null;
   return `<div class="ocard" onclick="${onclick}">
@@ -1294,6 +1359,43 @@ function changeOutingMonth(delta){
   outingSelectedDate=null;
   renderOutingHero();
   renderOutingCalendar();
+}
+
+// ── 日常踩點：年月快速選擇 ──
+let ompkYear=null;
+function openOutingMonthPicker(){
+  ompkYear=outingCalYear;
+  renderOutingMonthPicker();
+  openSh('outing-month-ov');
+}
+function shiftOutingPickerYear(delta){
+  ompkYear+=delta;
+  renderOutingMonthPicker();
+}
+function renderOutingMonthPicker(){
+  const yEl=document.getElementById('ompk-year');
+  const grid=document.getElementById('ompk-grid');
+  if(!yEl||!grid)return;
+  yEl.textContent=ompkYear;
+  const outings=getOutings();
+  const monthsWithRecord=new Set(
+    outings.map(o=>o.date).filter(Boolean)
+      .filter(ds=>ds.startsWith(String(ompkYear)))
+      .map(ds=>parseInt(ds.slice(5,7),10))
+  );
+  grid.innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>{
+    const isCur=ompkYear===outingCalYear&&(m-1)===outingCalMonth;
+    const hasRec=monthsWithRecord.has(m);
+    return `<button type="button" class="ompk-m${hasRec?' has':''}${isCur?' cur':''}" onclick="pickOutingMonth(${ompkYear},${m-1})">${m}月</button>`;
+  }).join('');
+}
+function pickOutingMonth(year,month){
+  outingCalYear=year;
+  outingCalMonth=month;
+  outingSelectedDate=null;
+  renderOutingHero();
+  renderOutingCalendar();
+  closeSh('outing-month-ov');
 }
 
 function renderOutingHero(){
@@ -1384,7 +1486,7 @@ function renderOutingDayList(){
     currentOutingId=null;
     if(step2btn)step2btn.classList.add('disabled');
     if(outings.length===0){
-      el.innerHTML=`<div class="outing-empty-state"><svg viewBox="0 0 24 24" style="width:36px;height:36px;stroke:rgba(1,61,90,.25);fill:none;stroke-width:1.5;margin-bottom:8px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><div class="et">還沒有日常踩點紀錄</div><div>點上方 Step 1 新增第一筆吧</div></div>`;
+      el.innerHTML=`<div class="outing-empty-state"><svg viewBox="0 0 24 24" style="width:36px;height:36px;stroke:var(--ink3);fill:none;stroke-width:1.5;margin-bottom:8px;opacity:.5;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><div class="et">還沒有日常踩點紀錄</div><div>點上方 Step 1 新增第一筆吧</div></div>`;
     } else {
       el.innerHTML=`<div class="outing-empty-state"><div class="et">選擇上方日期查看內容</div></div>`;
     }
@@ -1409,14 +1511,14 @@ function renderOutingDayList(){
     <div class="toprow">
       <div class="nm">${outing.name||'未命名踩點'}</div>
       <div class="actions">
-        <button class="evab ed" onclick="openEditOuting()"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="evab" style="background:#FFE0CC;" onclick="deleteOuting()"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        <button class="evab ed" onclick="openEditOuting()"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="evab dl" onclick="deleteOuting()"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
       </div>
     </div>
     ${outing.memo?`<div class="memo">${outing.memo}</div>`:''}
     <div class="hr"></div>
     <div class="bottomrow">
-      <div class="comp"${compStr?'':' style="color:rgba(1,61,90,.35);"'}><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>${compStr||'未填寫旅伴'}</span></div>
+      <div class="comp"${compStr?'':' style="color:var(--ink3);"'}><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>${compStr||'未填寫旅伴'}</span></div>
       ${weatherStr?`<div class="weather"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>${weatherStr}</div>`:''}
     </div>
   </div>
@@ -1441,8 +1543,8 @@ function renderOutingEventTimeline(outing){
     const isLast=i===events.length-1;
     const isExtended=timeSort(ev.startTime)>=24*60;
     const displayTime=formatEventTime(ev.startTime,isExtended);
-    const tagsHtml=ev.tags?splitTags(ev.tags).map(t=>`<span style="font-size:11px;font-weight:700;background:rgba(1,61,90,.08);color:#444;border:1px solid rgba(1,61,90,.15);border-radius:3px;padding:2px 8px;font-family:'Courier New',Courier,monospace;">${t}</span>`).join(''):'';
-    const ratingHtml=ev.rating?`<span style="font-size:11px;color:#666;font-weight:600;">★ ${ev.rating}/10</span>`:'';
+    const tagsHtml=ev.tags?splitTags(ev.tags).map(t=>`<span style="font-size:11px;font-weight:700;background:rgba(128,128,128,.15);color:var(--ink2);border:1px solid rgba(128,128,128,.25);border-radius:3px;padding:2px 8px;font-family:'Courier New',Courier,monospace;">${t}</span>`).join(''):'';
+    const ratingHtml=ev.rating?`<span style="font-size:11px;color:var(--ink3);font-weight:600;">★ ${ev.rating}/10</span>`:'';
     return `<div class="tle">
       <div class="tlt"${isExtended?' style="color:#e05500;font-weight:800;"':''}>${displayTime}</div>
       <div class="tldc">
@@ -1451,16 +1553,16 @@ function renderOutingEventTimeline(outing){
       </div>
       <div class="evc">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:3px;">
-          <div style="font-size:14px;font-weight:900;color:#013D5A;flex:1;">${ev.place||ev.desc||'（未命名）'}</div>
+          <div style="font-size:14px;font-weight:900;color:var(--ink);flex:1;">${ev.place||ev.desc||'（未命名）'}</div>
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
             <span class="evtype ${typePill[ev.type]||'pz'}" style="font-size:10px;">${ev.type||'其他'}</span>
-            <button class="evab ed" onclick="editOutingEvent('${ev.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-            <button class="evab" style="background:#FFE0CC;" onclick="deleteOutingEvent('${ev.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+            <button class="evab ed" onclick="editOutingEvent('${ev.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="evab dl" onclick="deleteOutingEvent('${ev.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
           </div>
         </div>
-        ${ev.desc&&ev.place?`<div style="font-size:13px;color:#333;margin-bottom:5px;line-height:1.4;">${ev.desc}</div>`:''}
+        ${ev.desc&&ev.place?`<div style="font-size:13px;color:var(--ink2);margin-bottom:5px;line-height:1.4;">${ev.desc}</div>`:''}
         ${tagsHtml?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px;">${tagsHtml}</div>`:''}
-        ${ev.note?`<div style="display:flex;align-items:flex-start;gap:5px;font-size:11px;color:#666;padding:4px 8px;background:rgba(1,61,90,.04);border-radius:4px;margin-bottom:3px;"><svg width="11" height="11" viewBox="0 0 24 24" stroke="#666" fill="none" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>${ev.note}</div>`:''}
+        ${ev.note?`<div style="display:flex;align-items:flex-start;gap:5px;font-size:11px;color:var(--ink3);padding:4px 8px;background:rgba(128,128,128,.1);border-radius:4px;margin-bottom:3px;"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>${ev.note}</div>`:''}
         ${ratingHtml?`<div style="margin-top:2px;">${ratingHtml}</div>`:''}
       </div>
     </div>`;
@@ -1584,8 +1686,8 @@ function renderOutingDetail(){
     const isLast=i===events.length-1;
     const isExtended=timeSort(ev.startTime)>=24*60;
     const displayTime=formatEventTime(ev.startTime,isExtended);
-    const tagsHtml=ev.tags?splitTags(ev.tags).map(t=>`<span style="font-size:11px;font-weight:700;background:rgba(1,61,90,.08);color:#444;border:1px solid rgba(1,61,90,.15);border-radius:3px;padding:2px 8px;font-family:'Courier New',Courier,monospace;">${t}</span>`).join(''):'';
-    const ratingHtml=ev.rating?`<span style="font-size:11px;color:#666;font-weight:600;">★ ${ev.rating}/10</span>`:'';
+    const tagsHtml=ev.tags?splitTags(ev.tags).map(t=>`<span style="font-size:11px;font-weight:700;background:rgba(128,128,128,.15);color:var(--ink2);border:1px solid rgba(128,128,128,.25);border-radius:3px;padding:2px 8px;font-family:'Courier New',Courier,monospace;">${t}</span>`).join(''):'';
+    const ratingHtml=ev.rating?`<span style="font-size:11px;color:var(--ink3);font-weight:600;">★ ${ev.rating}/10</span>`:'';
     return `<div class="tle">
       <div class="tlt"${isExtended?' style="color:#e05500;font-weight:800;"':''}>${displayTime}</div>
       <div class="tldc">
@@ -1594,16 +1696,16 @@ function renderOutingDetail(){
       </div>
       <div class="evc">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:3px;">
-          <div style="font-size:14px;font-weight:900;color:#013D5A;flex:1;">${ev.place||ev.desc||'（未命名）'}</div>
+          <div style="font-size:14px;font-weight:900;color:var(--ink);flex:1;">${ev.place||ev.desc||'（未命名）'}</div>
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
             <span class="evtype ${typePill[ev.type]||'pz'}" style="font-size:10px;">${ev.type||'其他'}</span>
-            <button class="evab ed" onclick="editOutingEvent('${ev.id}')" style="width:26px;height:26px;border-radius:6px;border:1.5px solid var(--ink);background:var(--white);"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-            <button class="evab" onclick="deleteOutingEvent('${ev.id}')" style="width:26px;height:26px;border-radius:6px;border:1.5px solid var(--ink);background:#FFE0CC;"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+            <button class="evab ed" onclick="editOutingEvent('${ev.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="evab dl" onclick="deleteOutingEvent('${ev.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
           </div>
         </div>
-        ${ev.desc&&ev.place?`<div style="font-size:13px;color:#333;margin-bottom:5px;line-height:1.4;">${ev.desc}</div>`:''}
+        ${ev.desc&&ev.place?`<div style="font-size:13px;color:var(--ink2);margin-bottom:5px;line-height:1.4;">${ev.desc}</div>`:''}
         ${tagsHtml?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px;">${tagsHtml}</div>`:''}
-        ${ev.note?`<div style="display:flex;align-items:flex-start;gap:5px;font-size:11px;color:#666;padding:4px 8px;background:rgba(1,61,90,.04);border-radius:4px;margin-bottom:3px;"><svg width="11" height="11" viewBox="0 0 24 24" stroke="#666" fill="none" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>${ev.note}</div>`:''}
+        ${ev.note?`<div style="display:flex;align-items:flex-start;gap:5px;font-size:11px;color:var(--ink3);padding:4px 8px;background:rgba(128,128,128,.1);border-radius:4px;margin-bottom:3px;"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>${ev.note}</div>`:''}
         ${ratingHtml?`<div style="margin-top:2px;">${ratingHtml}</div>`:''}
       </div>
     </div>`;
@@ -1906,17 +2008,17 @@ function renderNextTripIdeas(){
   }
   const statusColor={'做夢中':'#E8B4B8','規劃中':'#7FB5D6','確定成行':'#708C69'};
   const statusIcon={
-    '做夢中':'<svg width="10" height="10" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2.5" style="display:inline-block;vertical-align:-1px;margin-right:3px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
-    '規劃中':'<svg width="10" height="10" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2.5" style="display:inline-block;vertical-align:-1px;margin-right:3px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
-    '確定成行':'<svg width="10" height="10" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2.5" style="display:inline-block;vertical-align:-1px;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>'
+    '做夢中':'<svg width="10" height="10" viewBox="0 0 24 24" stroke="var(--ink-on-accent)" fill="none" stroke-width="2.5" style="display:inline-block;vertical-align:-1px;margin-right:3px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+    '規劃中':'<svg width="10" height="10" viewBox="0 0 24 24" stroke="var(--ink-on-accent)" fill="none" stroke-width="2.5" style="display:inline-block;vertical-align:-1px;margin-right:3px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+    '確定成行':'<svg width="10" height="10" viewBox="0 0 24 24" stroke="var(--ink-on-accent)" fill="none" stroke-width="2.5" style="display:inline-block;vertical-align:-1px;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>'
   };
   container.innerHTML=ideas.map(item=>{
     const dateStr=item.undated?'時間未定':([item.startDate?fmtDate(item.startDate):'',item.endDate?fmtDate(item.endDate):''].filter(Boolean).join(' – ')||'時間未定');
-    const paxIconSvg='<svg width="11" height="11" viewBox="0 0 24 24" stroke="#888" fill="none" stroke-width="2" style="display:inline-block;vertical-align:-1px;margin-right:3px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+    const paxIconSvg='<svg width="11" height="11" viewBox="0 0 24 24" stroke="var(--ink3)" fill="none" stroke-width="2" style="display:inline-block;vertical-align:-1px;margin-right:3px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
   const paxStr=(item.pax||[]).length?paxIconSvg+item.pax.join('、'):'';
-    return `<div style="padding:10px 12px;border:1.5px solid rgba(1,61,90,.3);border-radius:8px;margin-bottom:8px;background:#fff;">
+    return `<div style="padding:10px 12px;border:1.5px solid rgba(128,128,128,.35);border-radius:8px;margin-bottom:8px;background:var(--white);">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:4px;">
-        <div style="font-size:13px;font-weight:900;color:#013D5A;flex:1;min-width:0;display:flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${item.place}</div>
+        <div style="font-size:13px;font-weight:900;color:var(--ink);flex:1;min-width:0;display:flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${item.place}</div>
         <div style="display:flex;gap:4px;flex-shrink:0;">
           <button onclick="editNextTripIdea('${item.id}')" style="width:24px;height:24px;border-radius:6px;border:1.5px solid var(--ink);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;">
             <svg width="10" height="10" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1927,7 +2029,7 @@ function renderNextTripIdeas(){
         </div>
       </div>
       <div style="font-size:11px;color:var(--ink3);margin-bottom:6px;">${dateStr}${paxStr?' · '+paxStr:''}</div>
-      <span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:${statusColor[item.status]||'#eee'};">${statusIcon[item.status]||''}${item.status||'做夢中'}</span>
+      <span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:${statusColor[item.status]||'#eee'};color:var(--ink-on-accent);">${statusIcon[item.status]||''}${item.status||'做夢中'}</span>
     </div>`;
   }).join('');
 }
@@ -1971,12 +2073,12 @@ function buildFilterRow(trips){
   // 國家選單 items
   const countryItems=countries.length
     ? countries.map(c=>`<div class="fdrop-item ${activeCountry===c?'on':''}" onclick="filterTrips('country:${c}',null);closeDrops()">${countryFlag(c)} ${c}</div>`).join('')
-    : '<div class="fdrop-item" style="color:#aaa;">（無資料）</div>';
+    : '<div class="fdrop-item" style="color:var(--ink3);">（無資料）</div>';
 
   // 年份選單 items
   const yearItems=years.length
     ? years.map(y=>`<div class="fdrop-item ${activeYear===y?'on':''}" onclick="filterTrips('year:${y}',null);closeDrops()">${y}</div>`).join('')
-    : '<div class="fdrop-item" style="color:#aaa;">（無資料）</div>';
+    : '<div class="fdrop-item" style="color:var(--ink3);">（無資料）</div>';
 
   // 按鈕標籤
   const countryLabel=activeCountry?(countryFlag(activeCountry)+' '+activeCountry):'國家 ▾';
@@ -2115,7 +2217,7 @@ function renderTripDetail(){
   const memoElForPad=document.getElementById('det-memo');
   if(amountBadgeEl){
     if(totalStr){
-      amountBadgeEl.innerHTML=`<svg width="11" height="11" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span style="font-size:12px;font-weight:900;color:#013D5A;">${totalStr}</span>`;
+      amountBadgeEl.innerHTML=`<svg width="11" height="11" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span style="font-size:12px;font-weight:900;color:var(--ink);">${totalStr}</span>`;
       amountBadgeEl.style.display='flex';
       // 標題/memo留出右側空間，避免被貼紙蓋住（依金額字串長度粗略估算寬度）
       const padPx=Math.max(70,totalStr.length*7+30)+'px';
@@ -2133,9 +2235,9 @@ function renderTripDetail(){
   const destStr=trip.city||trip.country||'';
   const dateRangeStr=trip.startDate?(fmtDate(trip.startDate)+(trip.endDate?' – '+fmtDate(trip.endDate):'')):'';
   const infoParts=[];
-  if(destStr)infoParts.push(`<div style="display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span style="font-size:13px;font-weight:800;color:#013D5A;">${destStr}</span></div>`);
-  if(dateRangeStr)infoParts.push(`<div style="display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span style="font-size:13px;font-weight:800;color:#013D5A;">${dateRangeStr}</span></div>`);
-  if(days)infoParts.push(`<span style="font-size:11px;font-weight:700;color:rgba(1,61,90,.5);">${days}天</span>`);
+  if(destStr)infoParts.push(`<div style="display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span style="font-size:13px;font-weight:800;color:var(--ink);">${destStr}</span></div>`);
+  if(dateRangeStr)infoParts.push(`<div style="display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span style="font-size:13px;font-weight:800;color:var(--ink);">${dateRangeStr}</span></div>`);
+  if(days)infoParts.push(`<span style="font-size:11px;font-weight:700;color:var(--ink3);">${days}天</span>`);
   const infoRowEl=document.getElementById('det-info-row');
   if(infoRowEl){
     infoRowEl.innerHTML=infoParts.join('');
@@ -2147,7 +2249,7 @@ function renderTripDetail(){
   if(compEl){
     const comps=trip.companions||[];
     if(comps.length){
-      compEl.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" stroke="rgba(1,61,90,.45)" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span style="font-size:13px;font-weight:700;color:#013D5A;">'+comps.join('、')+'</span>';
+      compEl.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--ink3)" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span style="font-size:13px;font-weight:700;color:var(--ink);">'+comps.join('、')+'</span>';
       compEl.style.display='flex';
     } else compEl.style.display='none';
   }
@@ -2156,7 +2258,7 @@ function renderTripDetail(){
   const tagsEl=document.getElementById('det-tags');
   if(tagsEl){
     const arr=splitTags(trip.tags);
-    tagsEl.innerHTML=arr.map(t=>`<span style="font-size:13px;font-weight:700;padding:3px 9px;border-radius:99px;background:rgba(1,61,90,.07);color:#444;border:1px solid rgba(1,61,90,.12);">${t.startsWith('#')?t:'#'+t}</span>`).join('');
+    tagsEl.innerHTML=arr.map(t=>`<span style="font-size:13px;font-weight:700;padding:3px 9px;border-radius:99px;background:rgba(128,128,128,.13);color:var(--ink2);border:1px solid rgba(128,128,128,.22);">${t.startsWith('#')?t:'#'+t}</span>`).join('');
     tagsEl.style.display=arr.length?'flex':'none';
   }
 
@@ -2233,7 +2335,7 @@ function renderDayList(){
     const chips=splitTags(day.tags).map(t=>`<span class="dchip">${t}</span>`).join('');
     const weekday=['日','一','二','三','四','五','六'][new Date(day.date).getDay()];
     const accomHtml=day.accom?`<div style="font-size:11px;color:var(--ink3);margin-top:3px;display:flex;align-items:center;gap:3px;"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" style="flex-shrink:0;"><path d="M3 22V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14"/><path d="M2 22h20"/><path d="M15 22V12H9v10"/></svg>${day.accom}</div>`:'';
-    const highlightHtml=day.highlight?`<div style="font-size:12px;color:#333;margin-top:4px;line-height:1.4;">✦ ${day.highlight}</div>`:'';
+    const highlightHtml=day.highlight?`<div style="font-size:12px;color:var(--ink2);margin-top:4px;line-height:1.4;">✦ ${day.highlight}</div>`:'';
     const funHtml=day.fun?`<div style="font-size:12px;color:var(--orange);margin-top:2px;line-height:1.4;">😄 ${day.fun}</div>`:'';
     const evCount=(day.events||[]).length;
     const evBadge=evCount>0?`<span style="font-size:10px;font-weight:700;color:var(--ink3);">${evCount} 個事件</span>`:'';
@@ -2256,10 +2358,10 @@ function renderDayList(){
           <!-- 右上角：天氣 + 編輯/刪除 -->
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
             <span style="font-size:11px;color:var(--ink3);">${day.weather||''}</span>
-            <button onclick="openEditDayFromList('${day.id}')" style="width:26px;height:26px;border-radius:6px;border:1.5px solid var(--ink);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <button class="evab ed" onclick="openEditDayFromList('${day.id}')">
               <svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
-            <button onclick="deleteDayFromList('${day.id}')" style="width:26px;height:26px;border-radius:6px;border:1.5px solid var(--ink);background:#FFE0CC;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <button class="evab dl" onclick="deleteDayFromList('${day.id}')">
               <svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
             </button>
           </div>
@@ -2481,8 +2583,8 @@ function renderDayDetail(){
     const isExtended=timeSort(ev.startTime)>=24*60;
     const displayTime=formatEventTime(ev.startTime,isExtended);
     const mapsUrl=ev.place?`https://maps.google.com/search?q=${encodeURIComponent(ev.place)}`:'';
-    const tagsHtml=ev.tags?splitTags(ev.tags).map(t=>`<span style="font-size:11px;font-weight:700;background:rgba(1,61,90,.08);color:#444;border:1px solid rgba(1,61,90,.15);border-radius:3px;padding:2px 8px;font-family:'Courier New',Courier,monospace;">${t}</span>`).join(''):'';
-    const ratingHtml=ev.rating?`<span style="font-size:11px;color:#666;font-weight:600;">★ ${ev.rating}/10</span>`:'';
+    const tagsHtml=ev.tags?splitTags(ev.tags).map(t=>`<span style="font-size:11px;font-weight:700;background:rgba(128,128,128,.15);color:var(--ink2);border:1px solid rgba(128,128,128,.25);border-radius:3px;padding:2px 8px;font-family:'Courier New',Courier,monospace;">${t}</span>`).join(''):'';
+    const ratingHtml=ev.rating?`<span style="font-size:11px;color:var(--ink3);font-weight:600;">★ ${ev.rating}/10</span>`:'';
     return `<div class="tle">
       <div class="tlt"${isExtended?' style="color:#e05500;font-weight:800;"':''}>${displayTime}</div>
       <div class="tldc">
@@ -2492,19 +2594,19 @@ function renderDayDetail(){
       <div class="evc">
         <!-- 頂部：名稱 + 類型右對齊 + 編輯刪除 -->
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:3px;">
-          <div style="font-size:14px;font-weight:900;color:#013D5A;flex:1;">${ev.place||ev.desc||'（未命名）'}</div>
+          <div style="font-size:14px;font-weight:900;color:var(--ink);flex:1;">${ev.place||ev.desc||'（未命名）'}</div>
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
             <span class="evtype ${typePill[ev.type]||'pz'}" style="font-size:10px;">${ev.type||'其他'}</span>
-            <button class="evab ed" onclick="editEvent('${ev.id}')" style="width:26px;height:26px;border-radius:6px;border:1.5px solid var(--ink);background:var(--white);"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-            <button class="evab" onclick="deleteEvent('${ev.id}')" style="width:26px;height:26px;border-radius:6px;border:1.5px solid var(--ink);background:#FFE0CC;"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+            <button class="evab ed" onclick="editEvent('${ev.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="evab dl" onclick="deleteEvent('${ev.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
           </div>
         </div>
         <!-- 描述 -->
-        ${ev.desc&&ev.place?`<div style="font-size:13px;color:#333;margin-bottom:5px;line-height:1.4;">${ev.desc}</div>`:''}
+        ${ev.desc&&ev.place?`<div style="font-size:13px;color:var(--ink2);margin-bottom:5px;line-height:1.4;">${ev.desc}</div>`:''}
         <!-- hashtag -->
         ${tagsHtml?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px;">${tagsHtml}</div>`:''}
         <!-- 附註 -->
-        ${ev.note?`<div style="font-size:11px;color:#666;padding:4px 8px;background:rgba(1,61,90,.04);border-radius:4px;margin-bottom:3px;">📝 ${ev.note}</div>`:''}
+        ${ev.note?`<div style="font-size:11px;color:var(--ink3);padding:4px 8px;background:rgba(128,128,128,.1);border-radius:4px;margin-bottom:3px;">📝 ${ev.note}</div>`:''}
         <!-- 評分 -->
         ${ratingHtml?`<div style="margin-top:2px;">${ratingHtml}</div>`:''}
       </div>
@@ -2826,15 +2928,33 @@ function buildSearchIndex(){
   trips.forEach(t=>{
     (t.days||[]).forEach(d=>{
       (d.events||[]).forEach(ev=>{
-        if(ev.place)idx.push({type:'place',title:ev.place,sub:`${ev.type}・${t.country||''}`,trip:t.name,tripId:t.id,dayId:d.id});
-        if(ev.type==='餐廳'&&ev.place)idx.push({type:'food',title:ev.place,sub:`餐廳・評分${ev.rating||'—'}`,trip:t.name,tripId:t.id,dayId:d.id});
+        if(ev.place)idx.push({type:'place',title:ev.place,sub:`${ev.type}・${t.country||''}`,trip:t.name,tripId:t.id,dayId:d.id,source:'trip'});
+        if(ev.type==='餐廳'&&ev.place)idx.push({type:'food',title:ev.place,sub:`餐廳・評分${ev.rating||'—'}`,trip:t.name,tripId:t.id,dayId:d.id,source:'trip'});
       });
       splitTags(d.tags).forEach(tag=>{
-        idx.push({type:'tag',title:tag,sub:`${fmtDate(d.date)}`,trip:t.name,tripId:t.id,dayId:d.id});
+        idx.push({type:'tag',title:tag,sub:`${fmtDate(d.date)}`,trip:t.name,tripId:t.id,dayId:d.id,source:'trip'});
       });
     });
     (t.companions||[]).forEach(c=>{
-      idx.push({type:'companion',title:c,sub:'旅伴',trip:t.name,tripId:t.id});
+      idx.push({type:'companion',title:c,sub:'旅伴',trip:t.name,tripId:t.id,source:'trip'});
+    });
+  });
+
+  // 日常踩點（outings）一併納入搜尋索引
+  const outings=getOutings();
+  outings.forEach(o=>{
+    const label=o.city?`日常踩點・${o.city}`:'日常踩點';
+    if(o.city)idx.push({type:'place',title:o.city,sub:`${fmtDate(o.date)}・${o.name||''}`,trip:o.name,tripId:null,outingId:o.id,source:'outing'});
+    if(o.name)idx.push({type:'place',title:o.name,sub:`${label}・${fmtDate(o.date)}`,trip:o.name,tripId:null,outingId:o.id,source:'outing'});
+    splitTags(o.tags).forEach(tag=>{
+      idx.push({type:'tag',title:tag,sub:`${fmtDate(o.date)}`,trip:o.name,tripId:null,outingId:o.id,source:'outing'});
+    });
+    (o.companions||[]).forEach(c=>{
+      idx.push({type:'companion',title:c,sub:'旅伴',trip:o.name,tripId:null,outingId:o.id,source:'outing'});
+    });
+    (o.events||[]).forEach(ev=>{
+      if(ev.place)idx.push({type:'place',title:ev.place,sub:`${ev.type||'踩點'}・${o.city||''}`,trip:o.name,tripId:null,outingId:o.id,source:'outing'});
+      if(ev.type==='餐廳'&&ev.place)idx.push({type:'food',title:ev.place,sub:`餐廳・評分${ev.rating||'—'}`,trip:o.name,tripId:null,outingId:o.id,source:'outing'});
     });
   });
   return idx;
@@ -3145,8 +3265,13 @@ function doSearch(q){
     const div=document.createElement('div');
     div.className='sri';
     div.style.cursor='pointer';
-    div.innerHTML='<div class="sric" style="background:'+bg+'"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--ink);fill:none;stroke-width:2;"><circle cx="11" cy="11" r="8"/></svg></div><div><div style="font-size:12px;font-weight:800;">'+i.title+'</div><div class="cap">'+i.sub+'</div>'+(i.trip?'<div style="font-size:10px;font-weight:800;color:var(--blue);">'+i.trip+'</div>':'')+'</div>';
-    div.onclick=()=>showToast(i.title);
+    const srcBadge=i.source==='outing'?'<span style="font-size:9px;font-weight:800;color:var(--ink3);background:rgba(1,61,90,.08);border-radius:99px;padding:2px 7px;margin-left:4px;">日常踩點</span>':'';
+    div.innerHTML='<div class="sric" style="background:'+bg+'"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--ink-on-accent);fill:none;stroke-width:2;"><circle cx="11" cy="11" r="8"/></svg></div><div><div style="font-size:12px;font-weight:800;">'+i.title+'</div><div class="cap">'+i.sub+'</div><div style="display:flex;align-items:center;margin-top:1px;">'+(i.trip?'<div style="font-size:10px;font-weight:800;color:var(--blue);">'+i.trip+'</div>':'')+srcBadge+'</div></div>';
+    div.onclick=()=>{
+      if(i.source==='outing'&&i.outingId){openOuting(i.outingId);}
+      else if(i.tripId){openTrip(i.tripId);}
+      else{showToast(i.title);}
+    };
     return div.outerHTML;
   });
   res.innerHTML='<div style="padding:0 16px;">'+rows.join('')+'</div>';
@@ -3572,46 +3697,46 @@ function toggleMapLink(){
   <div class="phdr" style="padding:52px 16px 14px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
       <div>
-        <div style="font-size:8px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(1,61,90,.4);font-family:'Courier New',Courier,monospace;margin-bottom:3px;">TRAVEL RECEIPT  ·  記憶庫</div>
-        <div style="font-size:20px;font-weight:900;color:#013D5A;">嗨，<span class="user-greeting">旅行者</span></div>
+        <div style="font-size:8px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3);font-family:'Courier New',Courier,monospace;margin-bottom:3px;">TRAVEL RECEIPT  ·  記憶庫</div>
+        <div style="font-size:20px;font-weight:900;color:var(--ink);">嗨，<span class="user-greeting">旅行者</span></div>
       </div>
-      <button onclick="navigateTo('search')" style="width:34px;height:34px;padding:0;border-radius:50%;border:2px solid #013D5A;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 #013D5A;flex-shrink:0;">
-        <svg width="15" height="15" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <button onclick="navigateTo('search')" style="width:34px;height:34px;padding:0;border-radius:50%;border:2px solid var(--ink);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 var(--shadow-c);flex-shrink:0;">
+        <svg width="15" height="15" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       </button>
     </div>
 
     <!-- 完整護照卡 — 方案A：白底+細色條，跟旅行卡片統一風格 -->
     <div class="pp-card" id="home-pp-card" style="margin-bottom:0;cursor:pointer;" onclick="navigateTo('settings')">
       <div id="home-pp-bar" style="height:6px;background:#F5C857;"></div>
-      <div style="background:#fff;padding:9px 14px;border-bottom:1px solid rgba(1,61,90,.1);display:flex;justify-content:space-between;align-items:center;">
-        <div style="font-size:8px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(1,61,90,.4);font-family:'Courier New',Courier,monospace;">TRAVEL PASSPORT  ·  旅行記憶庫</div>
+      <div style="background:var(--white);padding:9px 14px;border-bottom:1px solid rgba(128,128,128,.15);display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:8px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3);font-family:'Courier New',Courier,monospace;">TRAVEL PASSPORT  ·  旅行記憶庫</div>
         <div id="home-pp-head-icon"></div>
       </div>
-      <div style="background:#fff;">
+      <div style="background:var(--white);">
         <div class="pp-holder">
           <div class="pp-avatar" id="home-pp-avatar-icon"></div>
           <div>
-            <div class="pp-info-label" style="color:#555;">PASSPORT HOLDER</div>
+            <div class="pp-info-label" style="color:var(--ink3);">PASSPORT HOLDER</div>
             <div class="pp-name" id="home-pp-name-disp">旅行者</div>
             <div class="pp-slogan" id="home-pp-bio-disp"></div>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(1,61,90,.1);">
-          <div style="padding:8px 6px;text-align:center;border-right:1px solid rgba(1,61,90,.08);">
-            <svg width="13" height="13" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2" style="margin-bottom:3px;"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
-            <div class="pp-sc-l" style="color:#555;">TRIPS</div><div class="pp-sc-n" id="home-pp-stat-trips">0</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(128,128,128,.15);">
+          <div style="padding:8px 6px;text-align:center;border-right:1px solid rgba(128,128,128,.12);">
+            <svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2" style="margin-bottom:3px;"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+            <div class="pp-sc-l" style="color:var(--ink3);">TRIPS</div><div class="pp-sc-n" id="home-pp-stat-trips">0</div>
           </div>
-          <div style="padding:8px 6px;text-align:center;border-right:1px solid rgba(1,61,90,.08);">
-            <svg width="13" height="13" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2" style="margin-bottom:3px;"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            <div class="pp-sc-l" style="color:#555;">CNTRY</div><div class="pp-sc-n" id="home-pp-stat-countries">0</div>
+          <div style="padding:8px 6px;text-align:center;border-right:1px solid rgba(128,128,128,.12);">
+            <svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2" style="margin-bottom:3px;"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <div class="pp-sc-l" style="color:var(--ink3);">CNTRY</div><div class="pp-sc-n" id="home-pp-stat-countries">0</div>
           </div>
-          <div style="padding:8px 6px;text-align:center;border-right:1px solid rgba(1,61,90,.08);">
-            <svg width="13" height="13" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2" style="margin-bottom:3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <div class="pp-sc-l" style="color:#555;">CITY</div><div class="pp-sc-n" id="home-pp-stat-cities">0</div>
+          <div style="padding:8px 6px;text-align:center;border-right:1px solid rgba(128,128,128,.12);">
+            <svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2" style="margin-bottom:3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div class="pp-sc-l" style="color:var(--ink3);">CITY</div><div class="pp-sc-n" id="home-pp-stat-cities">0</div>
           </div>
           <div style="padding:8px 6px;text-align:center;">
-            <svg width="13" height="13" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2" style="margin-bottom:3px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <div class="pp-sc-l" style="color:#555;">DAYS</div><div class="pp-sc-n" id="home-pp-stat-days">0</div>
+            <svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2" style="margin-bottom:3px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <div class="pp-sc-l" style="color:var(--ink3);">DAYS</div><div class="pp-sc-n" id="home-pp-stat-days">0</div>
           </div>
         </div>
       </div>
@@ -3628,15 +3753,13 @@ function toggleMapLink(){
     </div>
 
     <!-- Welcome card -->
-    <div id="no-memory-card" style="display:none;border:2px solid #013D5A;border-radius:10px;overflow:hidden;box-shadow:3px 3px 0 #013D5A;margin:14px 0 12px;background:#FCF3E3;">
-      <div style="padding:12px 14px 10px;border-bottom:1px dashed rgba(1,61,90,.2);background:#F5EBD8;background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(1,61,90,.03) 5px,rgba(1,61,90,.03) 6px);">
-        <div style="font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#013D5A;font-family:'Courier New',Courier,monospace;margin-bottom:3px;">TRAVEL RECEIPT</div>
-        <div style="font-size:13px;font-weight:900;color:#013D5A;">開始記錄你的旅行故事</div>
+    <div id="no-memory-card" style="display:none;border:2px solid var(--ink);border-radius:10px;overflow:hidden;box-shadow:3px 3px 0 var(--shadow-c);margin:14px 0 12px;background:var(--cream);">
+      <div style="padding:12px 14px 10px;border-bottom:1px dashed rgba(128,128,128,.3);background:var(--cream-deep);background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(128,128,128,.05) 5px,rgba(128,128,128,.05) 6px);">
+        <div style="font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);font-family:'Courier New',Courier,monospace;margin-bottom:3px;">TRAVEL RECEIPT</div>
+        <div style="font-size:13px;font-weight:900;color:var(--ink);">開始記錄你的旅行故事</div>
       </div>
       <div style="padding:12px 14px;">
-        <button type="button" onclick="openNewTrip()"
-          style="width:100%;font-size:13px;font-weight:900;padding:11px;cursor:pointer;font-family:inherit;
-                 background:#013D5A;border:2px solid #013D5A;border-radius:8px;box-shadow:3px 3px 0 rgba(1,61,90,.3);color:#FCF3E3;">
+        <button type="button" class="btn bink" onclick="openNewTrip()" style="width:100%;padding:11px;border-radius:8px;">
           ＋ 新增第一趟旅行
         </button>
       </div>
@@ -3648,7 +3771,7 @@ function toggleMapLink(){
       下次旅行清單
     </button>
     <div class="exf" id="next-trips-panel">
-      <button type="button" onclick="openNewIdea()" style="width:100%;margin:10px 0;font-size:13px;font-weight:900;padding:11px;cursor:pointer;font-family:inherit;background:#013D5A;border:2px solid #013D5A;border-radius:8px;box-shadow:3px 3px 0 rgba(1,61,90,.3);color:#FCF3E3;">＋ 新增旅行構想</button>
+      <button type="button" class="btn bink" onclick="openNewIdea()" style="width:100%;margin:10px 0;padding:11px;border-radius:8px;">＋ 新增旅行構想</button>
       <div id="next-trips-container"></div>
     </div>
 
@@ -3661,17 +3784,14 @@ function toggleMapLink(){
 <!-- ══ TRIPS ══ -->
 <div id="page-trips" class="page">
   <div class="phdr">
-    <div style="font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(1,61,90,.3);font-family:'Courier New',Courier,monospace;margin-bottom:3px;">MY TRIPS</div>
+    <div style="font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);font-family:'Courier New',Courier,monospace;margin-bottom:3px;">MY TRIPS</div>
     <div class="disp">所有旅行</div>
-    <div class="cap" style="margin-top:2px;color:rgba(1,61,90,.4);" id="trips-subtitle">0 趟旅行</div>
+    <div class="cap" style="margin-top:2px;" id="trips-subtitle">0 趟旅行</div>
   </div>
   <div class="sa">
-    <button type="button" onclick="openNewTrip()"
+    <button type="button" class="btn bink" onclick="openNewTrip()"
       style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
-             font-size:13px;font-weight:900;padding:11px 16px;cursor:pointer;font-family:inherit;
-             background:#013D5A;
-             border:2px solid #013D5A;border-radius:8px;box-shadow:3px 3px 0 rgba(1,61,90,.3);color:#FCF3E3;
-             margin-bottom:12px;">
+             padding:11px 16px;border-radius:8px;margin-bottom:12px;">
       ＋ 新增旅行
     </button>
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:4px;">
@@ -3713,56 +3833,56 @@ function toggleMapLink(){
     <div id="det-bar" class="trip-bar ty" style="margin:0 -16px 14px;"></div>
 
     <!-- TICKET — 重新設計：金額貼紙固定右上角 + 統一字級 + 線條icon -->
-    <div style="position:relative;border:2px solid #013D5A;border-radius:12px;overflow:hidden;box-shadow:3px 3px 0 #013D5A;background:#FCF3E3;">
+    <div style="position:relative;border:2px solid var(--ink);border-radius:12px;overflow:hidden;box-shadow:3px 3px 0 var(--shadow-c);background:var(--cream);">
       <!-- 金額貼紙：絕對定位，固定右上角 -->
-      <div id="det-amount-badge" style="display:none;position:absolute;top:12px;right:14px;align-items:center;gap:4px;background:rgba(1,61,90,.07);padding:4px 9px;border-radius:99px;"></div>
+      <div id="det-amount-badge" style="display:none;position:absolute;top:12px;right:14px;align-items:center;gap:4px;background:rgba(128,128,128,.15);padding:4px 9px;border-radius:99px;"></div>
       <div style="padding:14px 16px 12px;">
-        <div style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(1,61,90,.45);font-family:'Courier New',Courier,monospace;margin-bottom:4px;">TRAVEL PASS</div>
-        <div id="det-title" style="font-size:20px;font-weight:900;color:#013D5A;letter-spacing:-.3px;margin-bottom:4px;"></div>
-        <div id="det-memo" style="display:none;font-size:12px;font-style:italic;color:rgba(1,61,90,.55);line-height:1.4;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;"></div>
+        <div style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);font-family:'Courier New',Courier,monospace;margin-bottom:4px;">TRAVEL PASS</div>
+        <div id="det-title" style="font-size:20px;font-weight:900;color:var(--ink);letter-spacing:-.3px;margin-bottom:4px;"></div>
+        <div id="det-memo" style="display:none;font-size:12px;font-style:italic;color:var(--ink3);line-height:1.4;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;"></div>
       </div>
       <!-- 第一行：目的地 + 日期 + 天數 -->
-      <div id="det-info-row" style="padding:9px 16px;border-top:1.5px solid rgba(1,61,90,.12);display:flex;align-items:center;flex-wrap:wrap;gap:12px;"></div>
+      <div id="det-info-row" style="padding:9px 16px;border-top:1.5px solid rgba(128,128,128,.2);display:flex;align-items:center;flex-wrap:wrap;gap:12px;"></div>
       <!-- 第三行：旅伴 -->
-      <div id="det-companions" style="display:none;padding:9px 16px;border-top:1px solid rgba(1,61,90,.1);align-items:center;gap:7px;"></div>
+      <div id="det-companions" style="display:none;padding:9px 16px;border-top:1px solid rgba(128,128,128,.15);align-items:center;gap:7px;"></div>
       <!-- 第四行：標籤 -->
-      <div id="det-tags" style="display:none;padding:10px 16px;border-top:1.5px dashed rgba(1,61,90,.2);flex-wrap:wrap;gap:4px;"></div>
+      <div id="det-tags" style="display:none;padding:10px 16px;border-top:1.5px dashed rgba(128,128,128,.3);flex-wrap:wrap;gap:4px;"></div>
     </div>
 
     <!-- 航班展開按鈕 — 統一新視覺語言 -->
-    <button id="flight-toggle-btn" onclick="toggleFlightCard()" style="display:none;width:100%;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:800;padding:9px;border-radius:8px;border:1.5px solid rgba(1,61,90,.3);background:rgba(255,255,255,.6);color:#013D5A;cursor:pointer;margin-top:10px;font-family:inherit;">
-      <svg width="13" height="13" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:4px;"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.3.5-.1 1.1.4 1.4l5.8 3.5-3 3-2.5-.3c-.4-.1-.8.1-1 .4l-.2.3c-.3.4-.2 1 .2 1.3l2.7 2 2 2.7c.3.4.9.5 1.3.2l.3-.2c.3-.2.5-.6.4-1l-.3-2.5 3-3 3.5 5.8c.3.5.9.7 1.4.4l.5-.3c.4-.2.6-.6.5-1.1z"/></svg>航班資訊<svg width="10" height="10" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2.5" style="display:inline-block;vertical-align:-1px;margin-left:4px;"><polyline points="6 9 12 15 18 9"/></svg>
+    <button id="flight-toggle-btn" onclick="toggleFlightCard()" style="display:none;width:100%;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:800;padding:9px;border-radius:8px;border:1.5px solid rgba(128,128,128,.35);background:var(--white);color:var(--ink);cursor:pointer;margin-top:10px;font-family:inherit;">
+      <svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:4px;"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.3.5-.1 1.1.4 1.4l5.8 3.5-3 3-2.5-.3c-.4-.1-.8.1-1 .4l-.2.3c-.3.4-.2 1 .2 1.3l2.7 2 2 2.7c.3.4.9.5 1.3.2l.3-.2c.3-.2.5-.6.4-1l-.3-2.5 3-3 3.5 5.8c.3.5.9.7 1.4.4l.5-.3c.4-.2.6-.6.5-1.1z"/></svg>航班資訊<svg width="10" height="10" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2.5" style="display:inline-block;vertical-align:-1px;margin-left:4px;"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
 
     <!-- 航班卡片 — 統一新視覺語言 -->
-    <div id="flt-card" style="display:none;margin-top:10px;border:2px solid #013D5A;border-radius:12px;overflow:hidden;box-shadow:3px 3px 0 #013D5A;background:#FCF3E3;">
+    <div id="flt-card" style="display:none;margin-top:10px;border:2px solid var(--ink);border-radius:12px;overflow:hidden;box-shadow:3px 3px 0 var(--shadow-c);background:var(--cream);">
       <div id="flt-out-section" style="padding:12px 16px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-          <span style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(1,61,90,.45);font-family:'Courier New',Courier,monospace;">去程</span>
-          <span style="font-size:11px;font-weight:700;color:rgba(1,61,90,.6);margin-left:auto;" id="flt-out-fn"></span>
+          <span style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);font-family:'Courier New',Courier,monospace;">去程</span>
+          <span style="font-size:11px;font-weight:700;color:var(--ink3);margin-left:auto;" id="flt-out-fn"></span>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div><div style="font-size:19px;font-weight:900;color:#013D5A;" id="flt-out-dep"></div><div style="font-size:11px;color:rgba(1,61,90,.55);font-weight:600;" id="flt-out-t-dep"></div></div>
+          <div><div style="font-size:19px;font-weight:900;color:var(--ink);" id="flt-out-dep"></div><div style="font-size:11px;color:var(--ink3);font-weight:600;" id="flt-out-t-dep"></div></div>
           <div style="flex:1;display:flex;align-items:center;padding:0 10px;">
-            <div style="flex:1;height:1.5px;background:rgba(1,61,90,.25);"></div>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="#013D5A" style="margin:0 2px;"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+            <div style="flex:1;height:1.5px;background:rgba(128,128,128,.3);"></div>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--ink)" style="margin:0 2px;"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
           </div>
-          <div style="text-align:right;"><div style="font-size:19px;font-weight:900;color:#013D5A;" id="flt-out-arr"></div><div style="font-size:11px;color:rgba(1,61,90,.55);font-weight:600;" id="flt-out-t-arr"></div></div>
+          <div style="text-align:right;"><div style="font-size:19px;font-weight:900;color:var(--ink);" id="flt-out-arr"></div><div style="font-size:11px;color:var(--ink3);font-weight:600;" id="flt-out-t-arr"></div></div>
         </div>
       </div>
-      <div id="flt-divider" style="height:1.5px;background:repeating-linear-gradient(to right,rgba(1,61,90,.25) 0,rgba(1,61,90,.25) 4px,transparent 4px,transparent 8px);"></div>
+      <div id="flt-divider" style="height:1.5px;background:repeating-linear-gradient(to right,rgba(128,128,128,.3) 0,rgba(128,128,128,.3) 4px,transparent 4px,transparent 8px);"></div>
       <div id="flt-back-section" style="padding:12px 16px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-          <span style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(1,61,90,.45);font-family:'Courier New',Courier,monospace;">回程</span>
-          <span style="font-size:11px;font-weight:700;color:rgba(1,61,90,.6);margin-left:auto;" id="flt-back-fn"></span>
+          <span style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);font-family:'Courier New',Courier,monospace;">回程</span>
+          <span style="font-size:11px;font-weight:700;color:var(--ink3);margin-left:auto;" id="flt-back-fn"></span>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div><div style="font-size:19px;font-weight:900;color:#013D5A;" id="flt-back-dep"></div><div style="font-size:11px;color:rgba(1,61,90,.55);font-weight:600;" id="flt-back-t-dep"></div></div>
+          <div><div style="font-size:19px;font-weight:900;color:var(--ink);" id="flt-back-dep"></div><div style="font-size:11px;color:var(--ink3);font-weight:600;" id="flt-back-t-dep"></div></div>
           <div style="flex:1;display:flex;align-items:center;padding:0 10px;">
-            <div style="flex:1;height:1.5px;background:rgba(1,61,90,.25);"></div>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="#013D5A" style="margin:0 2px;"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+            <div style="flex:1;height:1.5px;background:rgba(128,128,128,.3);"></div>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--ink)" style="margin:0 2px;"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
           </div>
-          <div style="text-align:right;"><div style="font-size:19px;font-weight:900;color:#013D5A;" id="flt-back-arr"></div><div style="font-size:11px;color:rgba(1,61,90,.55);font-weight:600;" id="flt-back-t-arr"></div></div>
+          <div style="text-align:right;"><div style="font-size:19px;font-weight:900;color:var(--ink);" id="flt-back-arr"></div><div style="font-size:11px;color:var(--ink3);font-weight:600;" id="flt-back-t-arr"></div></div>
         </div>
       </div>
     </div>
@@ -3784,15 +3904,9 @@ function toggleMapLink(){
   </div>
   <!-- DAYS TAB -->
   <!-- 白色底區 — 新增按鈕 -->
-  <div id="add-day-bar" style="padding:10px 16px 12px;background:var(--white);border-bottom:1px solid rgba(1,61,90,.06);">
-    <button type="button" onclick="openSh('day-ov')"
-      style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
-             font-size:13px;font-weight:900;letter-spacing:0;text-transform:none;
-             padding:11px 16px;cursor:pointer;font-family:inherit;
-             background:#013D5A;
-             border:2px solid #013D5A;border-radius:8px;
-             box-shadow:3px 3px 0 rgba(1,61,90,.3);
-             color:#FCF3E3;">
+  <div id="add-day-bar" style="padding:10px 16px 12px;background:var(--white);border-bottom:1px solid rgba(128,128,128,.12);">
+    <button type="button" class="btn bink" onclick="openSh('day-ov')"
+      style="width:100%;letter-spacing:0;text-transform:none;padding:11px 16px;border-radius:8px;">
       ＋ 新增每日紀錄
     </button>
   </div>
@@ -3800,24 +3914,20 @@ function toggleMapLink(){
   <!-- EXPENSES TAB -->
   <div id="tab-expenses" style="display:none;padding:12px 16px;">
     <!-- 新增費用按鈕 — 票根風格，跟 ADD DAY RECORD 一致 -->
-    <button type="button" onclick="openSh('exp-ov')"
-      style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
-             font-size:13px;font-weight:900;padding:11px 16px;cursor:pointer;font-family:inherit;
-             background:#013D5A;
-             border:2px solid #013D5A;border-radius:8px;box-shadow:3px 3px 0 rgba(1,61,90,.3);color:#FCF3E3;
-             margin-bottom:10px;">
+    <button type="button" class="btn bink" onclick="openSh('exp-ov')"
+      style="width:100%;padding:11px 16px;border-radius:8px;margin-bottom:10px;">
       ＋ 新增費用
     </button>
     <!-- 總花費 — 白底黑線，跟新增按鈕區隔 -->
-    <div style="background:var(--white);border:2px solid #013D5A;border-radius:6px;box-shadow:2px 2px 0 #013D5A;padding:10px 14px;margin-bottom:10px;">
-      <div style="font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(1,61,90,.38);margin-bottom:3px;font-family:'Courier New',Courier,monospace;">TOTAL COST</div>
+    <div style="background:var(--white);border:2px solid var(--ink);border-radius:6px;box-shadow:2px 2px 0 var(--shadow-c);padding:10px 14px;margin-bottom:10px;">
+      <div style="font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px;font-family:'Courier New',Courier,monospace;">TOTAL COST</div>
       <div style="font-size:22px;font-weight:900;font-family:'Courier New',Courier,monospace;letter-spacing:-.5px;" id="exp-total-disp">TWD 0</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
       <div style="font-size:12px;font-weight:900;">費用明細</div>
       <div style="display:flex;gap:5px;">
-        <button class="sort-btn on" onclick="setSortMode('date',this)" style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;border:2px solid #013D5A;background:var(--yellow);cursor:pointer;box-shadow:1px 1px 0 #013D5A;">日期</button>
-        <button class="sort-btn" onclick="setSortMode('cat',this)" style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;border:2px solid #013D5A;background:var(--white);cursor:pointer;">類型</button>
+        <button class="sort-btn on" onclick="setSortMode('date',this)" style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;border:2px solid var(--ink-on-accent);background:var(--yellow);cursor:pointer;box-shadow:1px 1px 0 var(--ink-on-accent);color:var(--ink-on-accent);">日期</button>
+        <button class="sort-btn" onclick="setSortMode('cat',this)" style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;border:2px solid var(--ink);background:var(--white);cursor:pointer;color:var(--ink);">類型</button>
       </div>
     </div>
     <div class="card" style="padding:6px 11px;" id="exp-list-container"></div>
@@ -3825,32 +3935,30 @@ function toggleMapLink(){
   <!-- STORY TAB — 統一新風格 -->
   <div id="tab-story" style="display:none;padding:12px 16px;">
     <!-- 說明卡 — 白底+線條icon，跟其他卡片一致 -->
-    <div style="background:#fff;border:2px solid #013D5A;border-radius:10px;box-shadow:3px 3px 0 #013D5A;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
-      <svg width="20" height="20" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="1.8" style="flex-shrink:0;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    <div style="background:var(--white);border:2px solid var(--ink);border-radius:10px;box-shadow:3px 3px 0 var(--shadow-c);padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="1.8" style="flex-shrink:0;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
       <div>
-        <div style="font-size:14px;font-weight:900;color:#013D5A;margin-bottom:1px;">整理旅行故事</div>
-        <div style="font-size:12px;color:rgba(1,61,90,.5);">彙整主題、記憶和高評分事件</div>
+        <div style="font-size:14px;font-weight:900;color:var(--ink);margin-bottom:1px;">整理旅行故事</div>
+        <div style="font-size:12px;color:var(--ink3);">彙整主題、記憶和高評分事件</div>
       </div>
     </div>
     <!-- 生成按鈕 — 統一深藍實心風格 -->
-    <button type="button" onclick="generateStory()"
-      style="width:100%;font-size:13px;font-weight:900;padding:11px 16px;cursor:pointer;font-family:inherit;
-             background:#013D5A;
-             border:2px solid #013D5A;border-radius:8px;box-shadow:3px 3px 0 rgba(1,61,90,.3);color:#FCF3E3;margin-bottom:10px;">
+    <button type="button" class="btn bink" onclick="generateStory()"
+      style="width:100%;padding:11px 16px;border-radius:8px;margin-bottom:10px;">
       ＋ 整理旅行故事
     </button>
     <!-- 故事文字 — 白底，跟其他內容卡一致 -->
     <div id="ai-story-text" style="display:none;margin-bottom:10px;
-      background:#fff;
-      border:2px solid #013D5A;border-radius:10px;padding:14px;
+      background:var(--white);
+      border:2px solid var(--ink);border-radius:10px;padding:14px;
       font-size:13px;line-height:1.8;white-space:pre-wrap;
-      box-shadow:3px 3px 0 #013D5A;
-      color:#013D5A;">
+      box-shadow:3px 3px 0 var(--shadow-c);
+      color:var(--ink);">
     </div>
     <!-- 複製按鈕 — 次要操作，淡色底 -->
     <button type="button" onclick="copyStory()"
       style="width:100%;font-size:13px;font-weight:900;padding:10px 16px;cursor:pointer;font-family:inherit;
-             background:#fff;border:1.5px solid rgba(1,61,90,.3);border-radius:8px;color:#013D5A;
+             background:var(--white);border:1.5px solid rgba(128,128,128,.35);border-radius:8px;color:var(--ink);
              display:none;" id="copy-story-btn">
       複製故事
     </button>
@@ -3874,32 +3982,32 @@ function toggleMapLink(){
     </div>
 
     <!-- 色帶 -->
-    <div id="dd-bar" style="height:4px;background:#013D5A;margin:0 -16px 14px;"></div>
+    <div id="dd-bar" style="height:4px;background:var(--ink);margin:0 -16px 14px;"></div>
 
     <!-- 票根主體 -->
     <div class="c-ticket">
       <div class="c-ticket-head" style="padding:10px 14px 8px;">
         <div class="c-admit">DAY RECORD  ·  TRAVEL DIARY</div>
         <!-- 1. 日期（最大） -->
-        <div style="font-size:18px;font-weight:900;font-family:'Courier New',Courier,monospace;letter-spacing:-.3px;color:#013D5A;margin-bottom:2px;" id="dd-date-display">—</div>
+        <div style="font-size:18px;font-weight:900;font-family:'Courier New',Courier,monospace;letter-spacing:-.3px;color:var(--ink);margin-bottom:2px;" id="dd-date-display">—</div>
         <!-- 2. 主題 -->
-        <div style="font-size:13px;font-weight:900;color:#013D5A;margin-bottom:0;" id="dd-theme"></div>
+        <div style="font-size:13px;font-weight:900;color:var(--ink);margin-bottom:0;" id="dd-theme"></div>
       </div>
       <!-- 住宿 -->
       <div id="dd-accom-row" style="padding:7px 12px;border-top:1px solid rgba(1,61,90,.1);display:none;">
         <div class="c-cell-label">STAY</div>
-        <div style="font-size:11px;font-weight:700;color:#333;" id="dd-accom">—</div>
+        <div style="font-size:11px;font-weight:700;color:var(--ink2);" id="dd-accom">—</div>
       </div>
       <!-- 記憶 + 天氣 格線 -->
       <div style="display:grid;grid-template-columns:1fr auto;border-top:1px solid rgba(1,61,90,.1);">
         <div style="padding:7px 12px;border-right:1px solid rgba(1,61,90,.1);">
           <div class="c-cell-label">MEMORY</div>
-          <div style="font-size:11px;font-weight:700;color:#333;" id="dd-memory">—</div>
+          <div style="font-size:11px;font-weight:700;color:var(--ink2);" id="dd-memory">—</div>
         </div>
         <div style="padding:7px 12px;min-width:70px;">
           <div class="c-cell-label">WEATHER</div>
           <!-- 3+4. 天氣小字 -->
-          <div style="font-size:11px;font-weight:800;color:#555;" id="dd-weather">—</div>
+          <div style="font-size:11px;font-weight:800;color:var(--ink3);" id="dd-weather">—</div>
         </div>
       </div>
       <!-- 撕線 -->
@@ -3926,12 +4034,9 @@ function toggleMapLink(){
   </div>
 
   <!-- 4. 新增時程事件按鈕 — 票根風格，在 hero 下方 -->
-  <div style="padding:10px 16px 12px;background:var(--white);border-bottom:1px solid rgba(1,61,90,.06);">
-    <button type="button" onclick="openNewEvent()"
-      style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
-             font-size:13px;font-weight:900;padding:11px 16px;cursor:pointer;font-family:inherit;
-             background:#013D5A;
-             border:2px solid #013D5A;border-radius:8px;box-shadow:3px 3px 0 rgba(1,61,90,.3);color:#FCF3E3;">
+  <div style="padding:10px 16px 12px;background:var(--white);border-bottom:1px solid rgba(128,128,128,.12);">
+    <button type="button" class="btn bink" onclick="openNewEvent()"
+      style="width:100%;padding:11px 16px;border-radius:8px;">
       ＋ 新增時程事件
     </button>
   </div>
@@ -3943,9 +4048,9 @@ function toggleMapLink(){
 <!-- ══ OUTINGS LIST ══ -->
 <div id="page-outings" class="page">
   <div class="phdr">
-    <div style="font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(1,61,90,.3);font-family:'Courier New',Courier,monospace;margin-bottom:3px;">DAILY OUTINGS</div>
+    <div style="font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);font-family:'Courier New',Courier,monospace;margin-bottom:3px;">DAILY OUTINGS</div>
     <div class="disp">日常踩點</div>
-    <div class="cap" style="margin-top:2px;color:rgba(1,61,90,.4);" id="outings-subtitle">0 筆紀錄</div>
+    <div class="cap" style="margin-top:2px;" id="outings-subtitle">0 筆紀錄</div>
   </div>
 
   <!-- 清單日期卡 hero -->
@@ -3953,7 +4058,7 @@ function toggleMapLink(){
     <div class="ohero-bgnum" id="outing-hero-bgnum">6</div>
     <div class="ohero-top">
       <button type="button" class="ohero-nav" onclick="changeOutingMonth(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <div class="m" id="outing-hero-label">—</div>
+      <button type="button" class="m ohero-mbtn" id="outing-hero-label" onclick="openOutingMonthPicker()">—</button>
       <button type="button" class="ohero-nav" onclick="changeOutingMonth(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
     </div>
     <div class="ohero-chips" id="outing-hero-chips"></div>
@@ -3993,23 +4098,21 @@ function toggleMapLink(){
         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>踩點列表
       </button>
       <div style="display:flex;gap:5px;">
-        <button onclick="deleteOuting()" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:4px 11px;border-radius:8px;border:1.5px solid rgba(1,61,90,.2);background:var(--white);cursor:pointer;font-family:inherit;color:rgba(1,61,90,.5);"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.3"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>刪除</button>
-        <button onclick="openEditOuting()" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:4px 11px;border-radius:8px;border:1.5px solid rgba(1,61,90,.3);background:var(--white);cursor:pointer;font-family:inherit;color:#013D5A;"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.3"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>編輯</button>
+        <button onclick="deleteOuting()" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:4px 11px;border-radius:8px;border:1.5px solid rgba(128,128,128,.3);background:var(--white);cursor:pointer;font-family:inherit;color:var(--ink3);"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.3"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>刪除</button>
+        <button onclick="openEditOuting()" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:4px 11px;border-radius:8px;border:1.5px solid rgba(128,128,128,.35);background:var(--white);cursor:pointer;font-family:inherit;color:var(--ink);"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.3"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>編輯</button>
       </div>
     </div>
     <div style="height:4px;width:36px;background:#BDD3CE;border-radius:99px;margin-bottom:10px;"></div>
-    <div style="font-size:19px;font-weight:900;color:#013D5A;margin-bottom:5px;" id="od-name">未命名踩點</div>
+    <div style="font-size:19px;font-weight:900;color:var(--ink);margin-bottom:5px;" id="od-name">未命名踩點</div>
     <div style="font-size:12px;font-weight:700;color:var(--ink3);margin-bottom:8px;" id="od-date">—</div>
-    <div id="od-memo" style="font-size:12px;font-style:italic;color:rgba(1,61,90,.6);margin-bottom:12px;display:none;"></div>
+    <div id="od-memo" style="font-size:12px;font-style:italic;color:var(--ink3);margin-bottom:12px;display:none;"></div>
   </div>
 
   <!-- 新增時程事件按鈕 -->
-  <div style="padding:12px 16px;background:var(--white);border-bottom:1px solid rgba(1,61,90,.06);">
-    <button type="button" onclick="openNewOutingEvent()"
+  <div style="padding:12px 16px;background:var(--white);border-bottom:1px solid rgba(128,128,128,.12);">
+    <button type="button" class="btn bink" onclick="openNewOutingEvent()"
       style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
-             font-size:13px;font-weight:900;padding:11px 16px;cursor:pointer;font-family:inherit;
-             background:#013D5A;
-             border:2px solid #013D5A;border-radius:8px;box-shadow:3px 3px 0 rgba(1,61,90,.3);color:#FCF3E3;">
+             padding:11px 16px;border-radius:8px;">
       ＋ 新增時程事件
     </button>
   </div>
@@ -4029,17 +4132,17 @@ function toggleMapLink(){
   <div id="sm-tab-rank" class="sa">
     <div class="pilltabs-spacer"></div>
     <!-- 故事頁說明卡 — 票根風格 -->
-    <div style="background:#FCF3E3;background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(1,61,90,.04) 5px,rgba(1,61,90,.04) 6px);border:2px solid #013D5A;border-radius:8px;box-shadow:3px 3px 0 #013D5A;padding:14px;margin-bottom:12px;">
-      <div style="font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(1,61,90,.4);font-family:'Courier New',Courier,monospace;margin-bottom:6px;">TRAVEL STORIES</div>
+    <div style="background:var(--cream);background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(128,128,128,.06) 5px,rgba(128,128,128,.06) 6px);border:2px solid var(--ink);border-radius:8px;box-shadow:3px 3px 0 var(--shadow-c);padding:14px;margin-bottom:12px;color:var(--ink);">
+      <div style="font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);font-family:'Courier New',Courier,monospace;margin-bottom:6px;">TRAVEL STORIES</div>
       <div style="font-size:14px;font-weight:900;margin-bottom:4px;">旅行排行榜</div>
       <div style="font-size:13px;color:var(--ink3);">新增事件並評分後，自動整理景點與餐廳排行榜</div>
     </div>
     <div class="rkc">
-      <div class="rkh"><div><div style="font-size:8px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(1,61,90,.4);font-family:'Courier New',Courier,monospace;">TOP SPOTS</div><div style="font-size:12px;font-weight:900;">人生最佳景點</div></div></div>
+      <div class="rkh"><div><div style="font-size:8px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;font-family:'Courier New',Courier,monospace;">TOP SPOTS</div><div style="font-size:12px;font-weight:900;">人生最佳景點</div></div></div>
       <div id="rank-places"><div class="empty"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><div class="et">還沒有評分紀錄</div><div class="es">新增景點事件並給予評分</div></div></div>
     </div>
     <div class="rkc">
-      <div class="rkh eats"><div><div style="font-size:8px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(1,61,90,.5);font-family:'Courier New',Courier,monospace;">BEST EATS</div><div style="font-size:12px;font-weight:900;">最佳餐廳</div></div></div>
+      <div class="rkh eats"><div><div style="font-size:8px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;font-family:'Courier New',Courier,monospace;">BEST EATS</div><div style="font-size:12px;font-weight:900;">最佳餐廳</div></div></div>
       <div id="rank-foods"><div class="empty"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg><div class="et">還沒有餐廳評分</div></div></div>
     </div>
     <div class="shdr"><span class="sttl">旅伴足跡</span></div>
@@ -4085,39 +4188,39 @@ function toggleMapLink(){
     <!-- 護照卡 — 方案A：白底+細色條 -->
     <div class="pp-card" id="settings-pp-card">
       <div id="settings-pp-bar" style="height:6px;background:#F5C857;"></div>
-      <div style="background:#fff;padding:9px 14px;border-bottom:1px solid rgba(1,61,90,.1);display:flex;justify-content:space-between;align-items:center;">
-        <div style="font-size:8px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(1,61,90,.4);font-family:'Courier New',Courier,monospace;">TRAVEL PASSPORT  ·  旅行記憶庫</div>
+      <div style="background:var(--white);padding:9px 14px;border-bottom:1px solid rgba(128,128,128,.15);display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:8px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3);font-family:'Courier New',Courier,monospace;">TRAVEL PASSPORT  ·  旅行記憶庫</div>
         <div id="pp-head-icon"></div>
       </div>
-      <div style="background:#fff;">
+      <div style="background:var(--white);">
         <div class="pp-holder">
           <div class="pp-avatar" id="pp-avatar-icon"></div>
           <div>
-            <div class="pp-info-label" style="color:#555;">PASSPORT HOLDER</div>
+            <div class="pp-info-label" style="color:var(--ink3);">PASSPORT HOLDER</div>
             <div class="pp-name" id="pp-name-disp">旅行者</div>
             <div class="pp-slogan" id="pp-bio-disp"></div>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(1,61,90,.1);">
-          <div style="padding:8px 6px;text-align:center;border-right:1px solid rgba(1,61,90,.08);">
-            <svg width="13" height="13" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2" style="margin-bottom:3px;"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
-            <div class="pp-sc-l" style="color:#555;">TRIPS</div><div class="pp-sc-n" id="pp-stat-trips">0</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(128,128,128,.15);">
+          <div style="padding:8px 6px;text-align:center;border-right:1px solid rgba(128,128,128,.12);">
+            <svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2" style="margin-bottom:3px;"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+            <div class="pp-sc-l" style="color:var(--ink3);">TRIPS</div><div class="pp-sc-n" id="pp-stat-trips">0</div>
           </div>
-          <div style="padding:8px 6px;text-align:center;border-right:1px solid rgba(1,61,90,.08);">
-            <svg width="13" height="13" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2" style="margin-bottom:3px;"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            <div class="pp-sc-l" style="color:#555;">CNTRY</div><div class="pp-sc-n" id="pp-stat-countries">0</div>
+          <div style="padding:8px 6px;text-align:center;border-right:1px solid rgba(128,128,128,.12);">
+            <svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2" style="margin-bottom:3px;"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <div class="pp-sc-l" style="color:var(--ink3);">CNTRY</div><div class="pp-sc-n" id="pp-stat-countries">0</div>
           </div>
-          <div style="padding:8px 6px;text-align:center;border-right:1px solid rgba(1,61,90,.08);">
-            <svg width="13" height="13" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2" style="margin-bottom:3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <div class="pp-sc-l" style="color:#555;">CITY</div><div class="pp-sc-n" id="pp-stat-cities">0</div>
+          <div style="padding:8px 6px;text-align:center;border-right:1px solid rgba(128,128,128,.12);">
+            <svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2" style="margin-bottom:3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div class="pp-sc-l" style="color:var(--ink3);">CITY</div><div class="pp-sc-n" id="pp-stat-cities">0</div>
           </div>
           <div style="padding:8px 6px;text-align:center;">
-            <svg width="13" height="13" viewBox="0 0 24 24" stroke="#013D5A" fill="none" stroke-width="2" style="margin-bottom:3px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <div class="pp-sc-l" style="color:#555;">DAYS</div><div class="pp-sc-n" id="pp-stat-days">0</div>
+            <svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--ink)" fill="none" stroke-width="2" style="margin-bottom:3px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <div class="pp-sc-l" style="color:var(--ink3);">DAYS</div><div class="pp-sc-n" id="pp-stat-days">0</div>
           </div>
         </div>
         <div class="pp-foot">
-          <div class="pp-mrz" style="color:#555;">P&lt;TWN<span id="pp-mrz-name">旅行者</span>&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<br>TRAVELER&lt;001&lt;&lt;2026&lt;06</div>
+          <div class="pp-mrz" style="color:var(--ink3);">P&lt;TWN<span id="pp-mrz-name">旅行者</span>&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<br>TRAVELER&lt;001&lt;&lt;2026&lt;06</div>
           <div class="pp-barcode">
             <span style="height:18px;"></span><span style="height:12px;"></span><span style="height:20px;"></span><span style="height:8px;"></span><span style="height:20px;"></span><span style="height:14px;"></span><span style="height:20px;"></span><span style="height:10px;"></span><span style="height:20px;"></span><span style="height:15px;"></span><span style="height:8px;"></span><span style="height:20px;"></span>
           </div>
@@ -4133,7 +4236,7 @@ function toggleMapLink(){
 
     <!-- 可收合的編輯區 -->
     <div class="exf" id="pp-edit-panel">
-      <div style="font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:rgba(1,61,90,.4);margin-bottom:8px;">選擇圖示</div>
+      <div style="font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;">選擇圖示</div>
       <div class="icon-grid" style="margin-bottom:10px;">
         <div class="icon-opt sel" data-icon="plane" onclick="selectPPIcon(this,'plane')"><svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></div>
         <div class="icon-opt" data-icon="globe" onclick="selectPPIcon(this,'globe')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
@@ -4148,7 +4251,7 @@ function toggleMapLink(){
         <div class="icon-opt" data-icon="food" onclick="selectPPIcon(this,'food')"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
         <div class="icon-opt" data-icon="star" onclick="selectPPIcon(this,'star')"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
       </div>
-      <div style="font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:rgba(1,61,90,.4);margin-bottom:8px;">選擇底色</div>
+      <div style="font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;">選擇底色</div>
       <div class="col-opts" style="margin-bottom:12px;flex-wrap:wrap;">
         <div class="col-opt sel" data-color="#F5C857" style="background:#F5C857;" onclick="selectPPColor(this,'#F5C857')"></div>
         <div class="col-opt" data-color="#F0D9A0" style="background:#F0D9A0;" onclick="selectPPColor(this,'#F0D9A0')"></div>
@@ -4167,7 +4270,7 @@ function toggleMapLink(){
 
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">外觀</div>
     <div class="card" style="margin-bottom:11px;padding:4px 11px;">
-      <div class="setr"><div class="setl"><div class="setic" style="background:var(--yellow);"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div><div><div class="setlb">深色模式</div><div class="setsb">切換深色/淺色</div></div></div><button class="tgl" onclick="this.classList.toggle('on');showToast('切換中')"></button></div>
+      <div class="setr"><div class="setl"><div class="setic" style="background:var(--yellow);"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div><div><div class="setlb">深色模式</div><div class="setsb">切換深色/淺色</div></div></div><button class="tgl" id="dark-mode-toggle" onclick="toggleDarkMode()"></button></div>
       <div class="setr" style="border-bottom:none;"><div class="setl"><div class="setic" style="background:var(--blue);"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></div><div><div class="setlb">主題色</div><div class="setsb">目前：黃色</div></div></div><svg style="width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:2.5;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
     </div>
     <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">幣別</div>
@@ -4483,6 +4586,21 @@ function toggleMapLink(){
       <button type="button" onclick="clearFlightFields()" style="width:100%;margin-top:6px;padding:9px;background:#FFE0CC;border:1.5px solid rgba(180,40,0,.3);border-radius:8px;font-size:12px;font-weight:800;color:#b03000;cursor:pointer;font-family:inherit;">✕ 清除航班資訊</button>
     </div>
     <button class="btn bink blg" id="trip-save-btn" style="margin-top:11px;" onclick="saveTrip()">建立旅行</button>
+  </div>
+</div>
+
+<!-- 日常踩點：年月快速選擇 -->
+<div class="ov" id="outing-month-ov" onclick="closeBg(event,'outing-month-ov')">
+  <div class="sh">
+    <div class="shndl"></div>
+    <button class="shx" onclick="closeSh('outing-month-ov')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="shtl">跳到月份</div>
+    <div class="ompk-yrow">
+      <button type="button" class="ohero-nav" style="border-color:rgba(128,128,128,.35);background:var(--bg);" onclick="shiftOutingPickerYear(-1)"><svg viewBox="0 0 24 24" style="stroke:var(--ink);"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div class="ompk-year" id="ompk-year">2026</div>
+      <button type="button" class="ohero-nav" style="border-color:rgba(128,128,128,.35);background:var(--bg);" onclick="shiftOutingPickerYear(1)"><svg viewBox="0 0 24 24" style="stroke:var(--ink);"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+    <div class="ompk-grid" id="ompk-grid"></div>
   </div>
 </div>
 
