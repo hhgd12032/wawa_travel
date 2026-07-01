@@ -14,6 +14,13 @@
 })();
 </script>
 
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<!-- Google Identity Services（Google 登入按鈕） -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -543,6 +550,24 @@ select.fi{appearance:none;-webkit-appearance:none;-moz-appearance:none;padding:9
 .twp-confirm{width:100%;background:var(--ink-on-accent);color:var(--yellow);border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;}
 .twp-clear{background:none;border:1.5px solid rgba(128,128,128,.3);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--ink3);font-weight:700;cursor:pointer;}
 .twp-hint{font-size:11px;color:var(--ink3);}
+
+/* ── 登入畫面 ── */
+#login-screen{position:fixed;inset:0;z-index:9999;background:#FCF3E7;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
+:root[data-theme="dark"] #login-screen{background:#0E2330;}
+.login-logo{width:64px;height:64px;border-radius:16px;background:var(--ink-on-accent);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:4px 4px 0 var(--yellow);}
+.login-logo svg{width:32px;height:32px;stroke:#FCF3E3;fill:none;stroke-width:2;}
+.login-title{font-size:22px;font-weight:900;color:var(--ink-on-accent);margin-bottom:6px;letter-spacing:-.3px;}
+:root[data-theme="dark"] .login-title{color:#F3E9D8;}
+.login-sub{font-size:13px;color:#4A6B7D;margin-bottom:36px;text-align:center;line-height:1.5;}
+:root[data-theme="dark"] .login-sub{color:#9FB2BE;}
+.login-card{background:#fff;border:2px solid #013D5A;border-radius:16px;padding:24px;box-shadow:4px 4px 0 #013D5A;width:100%;max-width:320px;display:flex;flex-direction:column;align-items:center;gap:16px;}
+:root[data-theme="dark"] .login-card{background:#163245;border-color:#F3E9D8;box-shadow:4px 4px 0 rgba(0,0,0,.5);}
+.login-card-title{font-size:13px;font-weight:800;color:#013D5A;letter-spacing:.05em;}
+:root[data-theme="dark"] .login-card-title{color:#F3E9D8;}
+.login-note{font-size:11px;color:#4A6B7D;text-align:center;line-height:1.6;}
+:root[data-theme="dark"] .login-note{color:#9FB2BE;}
+.login-divider{width:100%;height:1px;background:rgba(1,61,90,.12);}
+:root[data-theme="dark"] .login-divider{background:rgba(243,233,216,.15);}
 </style>
 <script>
 
@@ -1079,6 +1104,33 @@ function toggleDarkMode(){
   applyTheme(next);
   showToast(next==='dark'?'✓ 已切換為深色模式':'✓ 已切換為淺色模式');
 }
+// ── 登出 ──
+function fbSignOut(){
+  if(!confirm('確定要登出嗎？\n登出後資料仍保留在雲端，下次登入可繼續使用。')) return;
+  fbAuth.signOut();
+}
+
+// ── 登入後更新設定頁帳號顯示 ──
+function updateLoginUI(user){
+  const nameEl  = document.getElementById('login-user-name');
+  const emailEl = document.getElementById('login-user-email');
+  const avatarEl= document.getElementById('login-user-avatar');
+  if(!nameEl) return;
+  if(user){
+    nameEl.textContent  = user.displayName || '旅行者';
+    emailEl.textContent = user.email || '';
+    if(user.photoURL){
+      avatarEl.innerHTML = '<img src="'+user.photoURL+'" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      avatarEl.textContent = (user.displayName||'U')[0].toUpperCase();
+    }
+  } else {
+    nameEl.textContent  = '未登入';
+    emailEl.textContent = '';
+    avatarEl.textContent= '?';
+  }
+}
+
 function initTheme(){
   let theme='light';
   try{theme=localStorage.getItem('ptk_theme')||'light';}catch(e){}
@@ -1086,6 +1138,101 @@ function initTheme(){
 }
 
 // ── DB helpers ──
+// ══════════════════════════════════════════
+// FIREBASE — 雲端同步
+// ══════════════════════════════════════════
+const ALLOWED_EMAIL = 'hhgd12032@gmail.com';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCxQt1Fmbx-VEoVP9lHU20ZajnxqtFoiEQ",
+  authDomain: "wawatravel-ec40a.firebaseapp.com",
+  projectId: "wawatravel-ec40a",
+  storageBucket: "wawatravel-ec40a.firebasestorage.app",
+  messagingSenderId: "821726283067",
+  appId: "1:821726283067:web:d98957a7223c7ce7bd631e"
+};
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const fbDb   = firebase.firestore();
+let   fbUser = null;
+let   fbSyncTimer = null;
+
+// 登入狀態變化時處理
+fbAuth.onAuthStateChanged(function(user){
+  if(user){
+    // 前端白名單二次驗證
+    if(user.email !== ALLOWED_EMAIL){
+      showToast('此帳號無存取權限');
+      fbAuth.signOut();
+      return;
+    }
+    fbUser = user;
+    document.getElementById('login-screen').style.display = 'none';
+    updateLoginUI(user);
+    fbLoadCloud();
+  } else {
+    fbUser = null;
+    updateLoginUI(null);
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+});
+
+// Google Identity Services 登入回調
+function handleGoogleSignIn(response){
+  if(!response || !response.credential){ showToast('登入失敗，請重試'); return; }
+  const credential = firebase.auth.GoogleAuthProvider.credential(response.credential);
+  fbAuth.signInWithCredential(credential)
+    .then(function(result){
+      // onAuthStateChanged 會接手後續處理
+    })
+    .catch(function(err){
+      console.error('Firebase sign-in error:', err);
+      showToast('登入失敗：' + err.message);
+    });
+}
+
+// 從 Firestore 載入資料（覆蓋 localStorage）
+async function fbLoadCloud(){
+  if(!fbUser) return;
+  try{
+    const doc = await fbDb.collection('users').doc(fbUser.uid).get();
+    if(doc.exists){
+      const d = doc.data();
+      if(d.ptk_trips)            localStorage.setItem('ptk_trips',            JSON.stringify(d.ptk_trips));
+      if(d.ptk_outings)          localStorage.setItem('ptk_outings',          JSON.stringify(d.ptk_outings));
+      if(d.ptk_next_trip_ideas)  localStorage.setItem('ptk_next_trip_ideas',  JSON.stringify(d.ptk_next_trip_ideas));
+      if(d.ptk_settings)         localStorage.setItem('ptk_settings',         JSON.stringify(d.ptk_settings));
+    }
+    // 資料載入完成後重新渲染
+    try{ buildRating(); }catch(e){}
+    try{ renderHome(); }catch(e){}
+    try{ renderTripList(); }catch(e){}
+    try{ renderOutingCalendar(); }catch(e){}
+    showToast('✓ 雲端資料已載入');
+  }catch(e){
+    console.error('fbLoadCloud error:', e);
+    showToast('雲端載入失敗，使用本機資料');
+  }
+}
+
+// 寫入 Firestore（debounce 1.5秒避免頻繁寫入）
+function fbSaveCloud(){
+  if(!fbUser) return;
+  clearTimeout(fbSyncTimer);
+  fbSyncTimer = setTimeout(async function(){
+    try{
+      await fbDb.collection('users').doc(fbUser.uid).set({
+        ptk_trips:           JSON.parse(localStorage.getItem('ptk_trips')           || '[]'),
+        ptk_outings:         JSON.parse(localStorage.getItem('ptk_outings')         || '[]'),
+        ptk_next_trip_ideas: JSON.parse(localStorage.getItem('ptk_next_trip_ideas') || '[]'),
+        ptk_settings:        JSON.parse(localStorage.getItem('ptk_settings')        || '{}'),
+        updatedAt:           firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }catch(e){ console.error('fbSaveCloud error:', e); }
+  }, 1500);
+}
+
+// ── DB helpers（localStorage 同步 + 雲端備份） ──
 function dbLoad(key){
   try{
     const raw=localStorage.getItem(key);
@@ -1096,9 +1243,9 @@ function dbLoad(key){
 function dbSave(key,val){
   try{
     localStorage.setItem(key,JSON.stringify(val));
-    // verify write
     const check=localStorage.getItem(key);
     if(!check)console.error('Save FAILED for',key);
+    fbSaveCloud(); // 同步到雲端
   }catch(e){
     console.error('dbSave error',key,e);
     if(e.name==='QuotaExceededError')showToast('儲存空間已滿，請清除舊資料');
@@ -1110,7 +1257,7 @@ function saveTrips(t){if(!Array.isArray(t))return;dbSave('ptk_trips',t);}
 function getOutings(){const o=dbLoad('ptk_outings');return Array.isArray(o)?o:[];}
 function saveOutings(o){if(!Array.isArray(o))return;dbSave('ptk_outings',o);}
 function getSettings(){try{return JSON.parse(localStorage.getItem('ptk_settings')||'{}');}catch{return {};}}
-function saveSettings(s){localStorage.setItem('ptk_settings',JSON.stringify(s));}
+function saveSettings(s){localStorage.setItem('ptk_settings',JSON.stringify(s));fbSaveCloud();}
 
 // ── ID generator ──
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
@@ -1904,6 +2051,7 @@ function getNextTripIdeas(){
 }
 function saveNextTripIdeas(arr){
   localStorage.setItem('ptk_next_trip_ideas',JSON.stringify(arr));
+  fbSaveCloud();
 }
 let editingIdeaId=null;
 
@@ -3688,6 +3836,36 @@ function toggleMapLink(){
 </script>
 </head>
 <body>
+
+<!-- ══ 登入畫面（未登入時顯示，登入後隱藏） ══ -->
+<div id="login-screen">
+  <div class="login-logo">
+    <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+  </div>
+  <div class="login-title">旅行記憶庫</div>
+  <div class="login-sub">你的旅行記憶，安全存放於雲端<br>只有你能存取</div>
+  <div class="login-card">
+    <div class="login-card-title">使用 Google 帳號登入</div>
+    <div class="login-divider"></div>
+    <!-- Google One Tap 登入按鈕 -->
+    <div id="g_id_onload"
+      data-client_id="821726283067-ru309q87qhvme798scs1casqnc27ge2c.apps.googleusercontent.com"
+      data-callback="handleGoogleSignIn"
+      data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin"
+      data-type="standard"
+      data-shape="rectangular"
+      data-theme="outline"
+      data-text="signin_with"
+      data-size="large"
+      data-locale="zh-TW"
+      data-width="260">
+    </div>
+    <div class="login-note">資料加密儲存於 Google Firebase<br>僅限授權帳號存取</div>
+  </div>
+</div>
+
 <div id="app">
 <div id="page-container">
 
@@ -4181,6 +4359,19 @@ function toggleMapLink(){
 <div id="page-settings" class="page">
   <div class="phdr"><div class="disp">設定</div></div>
   <div class="sa">
+
+    <!-- 雲端帳號區塊 -->
+    <div style="font-size:11px;font-weight:900;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);">雲端帳號</div>
+    <div class="card" style="padding:14px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+        <div id="login-user-avatar" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--ink);background:var(--yellow);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:900;color:var(--ink-on-accent);overflow:hidden;"></div>
+        <div style="min-width:0;">
+          <div id="login-user-name" style="font-size:13px;font-weight:900;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">載入中...</div>
+          <div id="login-user-email" style="font-size:11px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        </div>
+      </div>
+      <button onclick="fbSignOut()" style="flex-shrink:0;padding:7px 14px;border-radius:8px;border:1.5px solid rgba(128,128,128,.35);background:var(--white);font-size:12px;font-weight:800;color:var(--ink);cursor:pointer;font-family:inherit;">登出</button>
+    </div>
 
     
 
