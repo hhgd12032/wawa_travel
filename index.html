@@ -1611,15 +1611,17 @@ function formatCompanionsSummary(names,maxFull=5,maxShow=4){
 
 function handleStep2Click(){
   if(!outingSelectedDate){
-    showToast('請先選擇日期或新增踩點');
+    showToast('請先選擇日期');
     return;
   }
-  const outing=getOutings().find(o=>o.date===outingSelectedDate);
-  if(!outing){
+  const dayOutings=getOutings().filter(o=>o.date===outingSelectedDate);
+  if(dayOutings.length===0){
     showToast('請先完成 Step 1 新增踩點');
     return;
   }
-  currentOutingId=outing.id;
+  // 若當天只有一筆，直接指定；若有多筆，currentOutingId由各卡片的按鈕設定
+  if(dayOutings.length===1) currentOutingId=dayOutings[0].id;
+  if(!currentOutingId) currentOutingId=dayOutings[0].id;
   openNewOutingEvent();
 }
 
@@ -1640,44 +1642,75 @@ function renderOutingDayList(){
     return;
   }
 
-  const outing=outings.find(o=>o.date===outingSelectedDate);
-  if(!outing){
+  // 取得當天所有踩點（可能有多筆）
+  const dayOutings=outings.filter(o=>o.date===outingSelectedDate);
+
+  if(dayOutings.length===0){
     currentOutingId=null;
     if(step2btn)step2btn.classList.add('disabled');
     el.innerHTML=`<div class="outing-empty-state"><div class="et">這天還沒有踩點紀錄</div><div>點上方 Step 1 新增吧</div></div>`;
     return;
   }
 
-  currentOutingId=outing.id;
+  // 預設 currentOutingId 指向第一筆（Step2按鈕會加到最後點選的那筆）
+  currentOutingId=dayOutings[0].id;
   if(step2btn)step2btn.classList.remove('disabled');
 
-  const compStr=formatCompanionsSummary(outing.companions);
-  const weatherStr=outing.weather||'';
-
-  let html=`<div class="finalcard">
-    <div class="toprow">
-      <div class="nm">${outing.name||'未命名踩點'}</div>
-      <div class="actions">
-        <button class="evab ed" onclick="openEditOuting()"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="evab dl" onclick="deleteOuting()"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+  // 渲染所有踩點卡片
+  el.innerHTML=dayOutings.map(outing=>{
+    const compStr=formatCompanionsSummary(outing.companions);
+    const weatherStr=outing.weather||'';
+    return `<div class="finalcard" id="finalcard-${outing.id}">
+      <div class="toprow">
+        <div class="nm">${outing.name||'未命名踩點'}</div>
+        <div class="actions">
+          <button class="evab ed" onclick="openEditOutingById('${outing.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="evab dl" onclick="deleteOutingById('${outing.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+      ${outing.memo?`<div class="memo">${outing.memo}</div>`:''}
+      <div class="hr"></div>
+      <div class="bottomrow">
+        <div class="comp"${compStr?'':' style="color:var(--ink3);"'}><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>${compStr||'未填寫旅伴'}</span></div>
+        ${weatherStr?`<div class="weather"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>${weatherStr}</div>`:''}
       </div>
     </div>
-    ${outing.memo?`<div class="memo">${outing.memo}</div>`:''}
-    <div class="hr"></div>
-    <div class="bottomrow">
-      <div class="comp"${compStr?'':' style="color:var(--ink3);"'}><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>${compStr||'未填寫旅伴'}</span></div>
-      ${weatherStr?`<div class="weather"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>${weatherStr}</div>`:''}
+    <div class="shdr" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>${outing.name||'未命名踩點'}・時程事件</span>
+      <button class="stepbtn primary" style="flex:none;padding:6px 12px;font-size:12px;" onclick="addEventToOuting('${outing.id}')">② 新增時程</button>
     </div>
-  </div>
-  <div class="shdr">時程事件</div>
-  <div class="tlw" id="outing-tl-container" style="padding:0;"></div>`;
+    <div class="tlw" id="outing-tl-${outing.id}" style="padding:0;margin-bottom:20px;"></div>`;
+  }).join('');
 
-  el.innerHTML=html;
-  renderOutingEventTimeline(outing);
+  // 渲染每筆踩點的時程事件
+  dayOutings.forEach(outing=>{
+    renderOutingEventTimelineById(outing);
+  });
 }
 
-function renderOutingEventTimeline(outing){
-  const tl=document.getElementById('outing-tl-container');
+function addEventToOuting(outingId){
+  currentOutingId=outingId;
+  openNewOutingEvent();
+}
+
+function openEditOutingById(outingId){
+  currentOutingId=outingId;
+  openEditOuting();
+}
+
+function deleteOutingById(outingId){
+  currentOutingId=outingId;
+  deleteOuting();
+}
+
+function renderOutingEventTimelineById(outing){
+  const tl=document.getElementById('outing-tl-'+outing.id);
+  if(!tl)return;
+  renderOutingEventTimeline(outing,tl);
+}
+
+function renderOutingEventTimeline(outing, tlEl){
+  const tl=tlEl||document.getElementById('outing-tl-container');
   if(!tl)return;
   const events=(outing.events||[]).slice().sort((a,b)=>timeSort(a.startTime)-timeSort(b.startTime));
   if(events.length===0){
